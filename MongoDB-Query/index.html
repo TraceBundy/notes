@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>MongoDB - Tracebundy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "MongoDB";
+    var mkdocs_page_input_path = "MongoDB-Query.md";
+    var mkdocs_page_url = "/MongoDB-Query/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Tracebundy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="..">Home</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href="./">MongoDB</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#mongodb">MongoDB查询</a></li>
+                
+                    <li><a class="toctree-l4" href="#find">Find函数</a></li>
+                
+                    <li><a class="toctree-l4" href="#findfieldab">在find函数中，查找数组中的元素用[]例:{field:["A","B"]}</a></li>
+                
+                    <li><a class="toctree-l4" href="#_1">逻辑操作符:</a></li>
+                
+                    <li><a class="toctree-l4" href="#_2">元素查询:</a></li>
+                
+                    <li><a class="toctree-l4" href="#_3">估值操作符</a></li>
+                
+                    <li><a class="toctree-l4" href="#_4">地理位置</a></li>
+                
+                    <li><a class="toctree-l4" href="#_5">投射</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../about/">About</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Tracebundy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>MongoDB</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="mongodb">MongoDB查询</h2>
+<h5 id="find">Find函数</h5>
+<p>比较操作有<code>$eq</code>,<code>$gt</code>,<code>$gte</code>,<code>$lt</code>,<code>$lte</code>,<code>$ne</code>,<code>$in</code>,<code>$nin</code>
+查询方式<code>{ &lt;field&gt;: { $?: &lt;value&gt; } }</code>
+<code>$eq</code>查询:
+  <code>{ &lt;field&gt;: { $eq: &lt;value&gt; } }</code>等价<code>{ field: &lt;value&gt; }</code></p>
+<h5 id="findfieldab">在find函数中，查找数组中的元素用<code>[]</code>例:<code>{field:["A","B"]}</code></h5>
+<p>查找嵌套元素利用<code>.</code>来查找例:<code>{"item.tag":"A"}</code></p>
+<h4 id="_1">逻辑操作符:</h4>
+<p><code>$or</code>,<code>$and</code>,<code>$not</code>,<code>$nor</code>
+<code>{ $?: [ { &lt;expression1&gt; }, { &lt;expression2&gt; }, ... , { &lt;expressionN&gt; } ] }</code>
+注意在用<code>$or</code>查找同一个字段的多个值时,可以使用<code>$in</code>来代替</p>
+<h4 id="_2">元素查询:</h4>
+<p><code>$exists</code>,<code>$type</code>
+<code>$exists</code>判断文档中包含指定字段，其中为true时值为null也会被匹配到
+<code>{ field: { $exists: &lt;boolean&gt; } }</code>
+<code>$type</code>返回文档中指定字段属于指定的类型
+<code>{ field: { $type: &lt;BSON type number&gt; | &lt;String alias&gt; } }</code></p>
+<h4 id="_3">估值操作符</h4>
+<p><code>$mod</code>,<code>$regex</code>,<code>$text</code>,<code>$where</code>
+<code>$mod</code> 取模：<code>{ field: { $mod: [ divisor, remainder ] } }</code>
+<code>$regex</code> : <code>{ &lt;field&gt;: { $regex: /pattern/, $options: '&lt;options&gt;' } }</code> 选项：<code>i</code>忽略大小写 <code>m</code>多个起始点匹配 <code>x</code>扩展 <code>s</code>允许'.*'来匹配
+<code>$text</code> <code>$where</code></p>
+<h4 id="_4">地理位置</h4>
+<p><code>geoWithin</code> 查找在指定范围内的数据
+<code>geoIntersects</code>查找指定范围内相交的数据
+<code>near</code> 有近到远返回指定位置相近的数据，可以是GeoJSON也可以是数组坐标
+<code>nearSphere</code>有近到远返回指定位置相近的数据，可以是GeoJSON也可以是数组坐标。<code>nearSphere</code>球面计算方式</p>
+<h4 id="_5">投射</h4>
+<p>投射操作符<code>$</code> <code>$elemMatch</code> <code>$meta</code> <code>$slice</code>
+<code>$</code>操作符返回匹配数组中的第一个元素
+<code>$elemMatch</code> 操作符返回匹配数组中的字段的第一个元素
+<code>$meta</code>操作符返回文本相关性的值
+<code>$slice</code>返回指定数量的元素</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../about/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>

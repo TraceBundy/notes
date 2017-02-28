@@ -21,6 +21,51 @@
             "title": "Project layout"
         }, 
         {
+            "location": "/MongoDB-Query/", 
+            "text": "MongoDB\u67e5\u8be2\n\n\nFind\u51fd\u6570\n\n\n\u6bd4\u8f83\u64cd\u4f5c\u6709\n$eq\n,\n$gt\n,\n$gte\n,\n$lt\n,\n$lte\n,\n$ne\n,\n$in\n,\n$nin\n\n\u67e5\u8be2\u65b9\u5f0f\n{ \nfield\n: { $?: \nvalue\n } }\n\n\n$eq\n\u67e5\u8be2:\n  \n{ \nfield\n: { $eq: \nvalue\n } }\n\u7b49\u4ef7\n{ field: \nvalue\n }\n\n\n\u5728find\u51fd\u6570\u4e2d\uff0c\u67e5\u627e\u6570\u7ec4\u4e2d\u7684\u5143\u7d20\u7528\n[]\n\u4f8b:\n{field:[\"A\",\"B\"]}\n\n\n\u67e5\u627e\u5d4c\u5957\u5143\u7d20\u5229\u7528\n.\n\u6765\u67e5\u627e\u4f8b:\n{\"item.tag\":\"A\"}\n\n\n\u903b\u8f91\u64cd\u4f5c\u7b26:\n\n\n$or\n,\n$and\n,\n$not\n,\n$nor\n\n\n{ $?: [ { \nexpression1\n }, { \nexpression2\n }, ... , { \nexpressionN\n } ] }\n\n\u6ce8\u610f\u5728\u7528\n$or\n\u67e5\u627e\u540c\u4e00\u4e2a\u5b57\u6bb5\u7684\u591a\u4e2a\u503c\u65f6,\u53ef\u4ee5\u4f7f\u7528\n$in\n\u6765\u4ee3\u66ff\n\n\n\u5143\u7d20\u67e5\u8be2:\n\n\n$exists\n,\n$type\n\n\n$exists\n\u5224\u65ad\u6587\u6863\u4e2d\u5305\u542b\u6307\u5b9a\u5b57\u6bb5\uff0c\u5176\u4e2d\u4e3atrue\u65f6\u503c\u4e3anull\u4e5f\u4f1a\u88ab\u5339\u914d\u5230\n\n{ field: { $exists: \nboolean\n } }\n\n\n$type\n\u8fd4\u56de\u6587\u6863\u4e2d\u6307\u5b9a\u5b57\u6bb5\u5c5e\u4e8e\u6307\u5b9a\u7684\u7c7b\u578b\n\n{ field: { $type: \nBSON type number\n | \nString alias\n } }\n\n\n\u4f30\u503c\u64cd\u4f5c\u7b26\n\n\n$mod\n,\n$regex\n,\n$text\n,\n$where\n\n\n$mod\n \u53d6\u6a21\uff1a\n{ field: { $mod: [ divisor, remainder ] } }\n\n\n$regex\n : \n{ \nfield\n: { $regex: /pattern/, $options: '\noptions\n' } }\n \u9009\u9879\uff1a\ni\n\u5ffd\u7565\u5927\u5c0f\u5199 \nm\n\u591a\u4e2a\u8d77\u59cb\u70b9\u5339\u914d \nx\n\u6269\u5c55 \ns\n\u5141\u8bb8'.*'\u6765\u5339\u914d\n\n$text\n \n$where\n\n\n\u5730\u7406\u4f4d\u7f6e\n\n\ngeoWithin\n \u67e5\u627e\u5728\u6307\u5b9a\u8303\u56f4\u5185\u7684\u6570\u636e\n\ngeoIntersects\n\u67e5\u627e\u6307\u5b9a\u8303\u56f4\u5185\u76f8\u4ea4\u7684\u6570\u636e\n\nnear\n \u6709\u8fd1\u5230\u8fdc\u8fd4\u56de\u6307\u5b9a\u4f4d\u7f6e\u76f8\u8fd1\u7684\u6570\u636e\uff0c\u53ef\u4ee5\u662fGeoJSON\u4e5f\u53ef\u4ee5\u662f\u6570\u7ec4\u5750\u6807\n\nnearSphere\n\u6709\u8fd1\u5230\u8fdc\u8fd4\u56de\u6307\u5b9a\u4f4d\u7f6e\u76f8\u8fd1\u7684\u6570\u636e\uff0c\u53ef\u4ee5\u662fGeoJSON\u4e5f\u53ef\u4ee5\u662f\u6570\u7ec4\u5750\u6807\u3002\nnearSphere\n\u7403\u9762\u8ba1\u7b97\u65b9\u5f0f\n\n\n\u6295\u5c04\n\n\n\u6295\u5c04\u64cd\u4f5c\u7b26\n$\n \n$elemMatch\n \n$meta\n \n$slice\n\n\n$\n\u64cd\u4f5c\u7b26\u8fd4\u56de\u5339\u914d\u6570\u7ec4\u4e2d\u7684\u7b2c\u4e00\u4e2a\u5143\u7d20\n\n$elemMatch\n \u64cd\u4f5c\u7b26\u8fd4\u56de\u5339\u914d\u6570\u7ec4\u4e2d\u7684\u5b57\u6bb5\u7684\u7b2c\u4e00\u4e2a\u5143\u7d20\n\n$meta\n\u64cd\u4f5c\u7b26\u8fd4\u56de\u6587\u672c\u76f8\u5173\u6027\u7684\u503c\n\n$slice\n\u8fd4\u56de\u6307\u5b9a\u6570\u91cf\u7684\u5143\u7d20", 
+            "title": "MongoDB"
+        }, 
+        {
+            "location": "/MongoDB-Query/#mongodb", 
+            "text": "", 
+            "title": "MongoDB\u67e5\u8be2"
+        }, 
+        {
+            "location": "/MongoDB-Query/#find", 
+            "text": "\u6bd4\u8f83\u64cd\u4f5c\u6709 $eq , $gt , $gte , $lt , $lte , $ne , $in , $nin \n\u67e5\u8be2\u65b9\u5f0f {  field : { $?:  value  } }  $eq \u67e5\u8be2:\n   {  field : { $eq:  value  } } \u7b49\u4ef7 { field:  value  }", 
+            "title": "Find\u51fd\u6570"
+        }, 
+        {
+            "location": "/MongoDB-Query/#findfieldab", 
+            "text": "\u67e5\u627e\u5d4c\u5957\u5143\u7d20\u5229\u7528 . \u6765\u67e5\u627e\u4f8b: {\"item.tag\":\"A\"}", 
+            "title": "\u5728find\u51fd\u6570\u4e2d\uff0c\u67e5\u627e\u6570\u7ec4\u4e2d\u7684\u5143\u7d20\u7528[]\u4f8b:{field:[\"A\",\"B\"]}"
+        }, 
+        {
+            "location": "/MongoDB-Query/#_1", 
+            "text": "$or , $and , $not , $nor  { $?: [ {  expression1  }, {  expression2  }, ... , {  expressionN  } ] } \n\u6ce8\u610f\u5728\u7528 $or \u67e5\u627e\u540c\u4e00\u4e2a\u5b57\u6bb5\u7684\u591a\u4e2a\u503c\u65f6,\u53ef\u4ee5\u4f7f\u7528 $in \u6765\u4ee3\u66ff", 
+            "title": "\u903b\u8f91\u64cd\u4f5c\u7b26:"
+        }, 
+        {
+            "location": "/MongoDB-Query/#_2", 
+            "text": "$exists , $type  $exists \u5224\u65ad\u6587\u6863\u4e2d\u5305\u542b\u6307\u5b9a\u5b57\u6bb5\uff0c\u5176\u4e2d\u4e3atrue\u65f6\u503c\u4e3anull\u4e5f\u4f1a\u88ab\u5339\u914d\u5230 { field: { $exists:  boolean  } }  $type \u8fd4\u56de\u6587\u6863\u4e2d\u6307\u5b9a\u5b57\u6bb5\u5c5e\u4e8e\u6307\u5b9a\u7684\u7c7b\u578b { field: { $type:  BSON type number  |  String alias  } }", 
+            "title": "\u5143\u7d20\u67e5\u8be2:"
+        }, 
+        {
+            "location": "/MongoDB-Query/#_3", 
+            "text": "$mod , $regex , $text , $where  $mod  \u53d6\u6a21\uff1a { field: { $mod: [ divisor, remainder ] } }  $regex  :  {  field : { $regex: /pattern/, $options: ' options ' } }  \u9009\u9879\uff1a i \u5ffd\u7565\u5927\u5c0f\u5199  m \u591a\u4e2a\u8d77\u59cb\u70b9\u5339\u914d  x \u6269\u5c55  s \u5141\u8bb8'.*'\u6765\u5339\u914d $text   $where", 
+            "title": "\u4f30\u503c\u64cd\u4f5c\u7b26"
+        }, 
+        {
+            "location": "/MongoDB-Query/#_4", 
+            "text": "geoWithin  \u67e5\u627e\u5728\u6307\u5b9a\u8303\u56f4\u5185\u7684\u6570\u636e geoIntersects \u67e5\u627e\u6307\u5b9a\u8303\u56f4\u5185\u76f8\u4ea4\u7684\u6570\u636e near  \u6709\u8fd1\u5230\u8fdc\u8fd4\u56de\u6307\u5b9a\u4f4d\u7f6e\u76f8\u8fd1\u7684\u6570\u636e\uff0c\u53ef\u4ee5\u662fGeoJSON\u4e5f\u53ef\u4ee5\u662f\u6570\u7ec4\u5750\u6807 nearSphere \u6709\u8fd1\u5230\u8fdc\u8fd4\u56de\u6307\u5b9a\u4f4d\u7f6e\u76f8\u8fd1\u7684\u6570\u636e\uff0c\u53ef\u4ee5\u662fGeoJSON\u4e5f\u53ef\u4ee5\u662f\u6570\u7ec4\u5750\u6807\u3002 nearSphere \u7403\u9762\u8ba1\u7b97\u65b9\u5f0f", 
+            "title": "\u5730\u7406\u4f4d\u7f6e"
+        }, 
+        {
+            "location": "/MongoDB-Query/#_5", 
+            "text": "\u6295\u5c04\u64cd\u4f5c\u7b26 $   $elemMatch   $meta   $slice  $ \u64cd\u4f5c\u7b26\u8fd4\u56de\u5339\u914d\u6570\u7ec4\u4e2d\u7684\u7b2c\u4e00\u4e2a\u5143\u7d20 $elemMatch  \u64cd\u4f5c\u7b26\u8fd4\u56de\u5339\u914d\u6570\u7ec4\u4e2d\u7684\u5b57\u6bb5\u7684\u7b2c\u4e00\u4e2a\u5143\u7d20 $meta \u64cd\u4f5c\u7b26\u8fd4\u56de\u6587\u672c\u76f8\u5173\u6027\u7684\u503c $slice \u8fd4\u56de\u6307\u5b9a\u6570\u91cf\u7684\u5143\u7d20", 
+            "title": "\u6295\u5c04"
+        }, 
+        {
             "location": "/about/", 
             "text": "\u4e2a\u4eba\u7b80\u4ecb\n\n\n\u672c\u4eba\u4ece\u4e8bC++\u670d\u52a1\u5668\u540e\u53f0\u5f00\u53d1\uff0c\u559c\u6b22\u5206\u5e03\u5f0f\u3001\u6570\u636e\u5e93\u7b49", 
             "title": "About"
