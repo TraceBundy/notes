@@ -76,6 +76,21 @@
                     <li><a class="toctree-l4" href="#_5">投射</a></li>
                 
             
+                <li class="toctree-l3"><a href="#_6">索引策略</a></li>
+                
+                    <li><a class="toctree-l4" href="#_7">创建索引需要考虑的因素</a></li>
+                
+                    <li><a class="toctree-l4" href="#_8">最佳判断方式</a></li>
+                
+                    <li><a class="toctree-l4" href="#_9">查询中索引作用行为</a></li>
+                
+                    <li><a class="toctree-l4" href="#_10">创建满足查询需求的索引</a></li>
+                
+                    <li><a class="toctree-l4" href="#_11">在区分度高的字段上创建索引</a></li>
+                
+                    <li><a class="toctree-l4" href="#_12">使用索引进行结果排序</a></li>
+                
+            
             </ul>
         
     </li>
@@ -154,6 +169,61 @@
 <code>$elemMatch</code> 操作符返回匹配数组中的字段的第一个元素
 <code>$meta</code>操作符返回文本相关性的值
 <code>$slice</code>返回指定数量的元素</p>
+<h2 id="_6">索引策略</h2>
+<h4 id="_7">创建索引需要考虑的因素</h4>
+<pre><code>* 应用当前及预期的查询操作类型
+* 应用查询的读写比
+* 系统可用内存情况
+
+优化查询语句 尽可能的全覆盖 或覆盖前缀
+</code></pre>
+
+<h4 id="_8">最佳判断方式</h4>
+<pre><code>* 建立不同索引并模拟测试和分析实际表现
+</code></pre>
+
+<h4 id="_9">查询中索引作用行为</h4>
+<pre><code>*绝大多数查询仅使用一个索引
+*当查询中包括$or时，每个条件可能使用不同索引
+*查询不同字段时，可能出现索引交替使用的情况
+</code></pre>
+
+<h4 id="_10">创建满足查询需求的索引</h4>
+<pre><code>*如果查询都使用相同字段，则建立单字段索引
+*如果还走其它字段，则可建立复合索引
+    *也可分别建立索引
+*尽可能实现覆盖查询，无需回表，提升效率
+</code></pre>
+
+<h4 id="_11">在区分度高的字段上创建索引</h4>
+<pre><code>*这个字段出现重复值的概率比较小。通过查询条件能准确的查询到数据在分片的片键选择上对区分度有较高要求
+* 尽可能的保证索引都尽可能的放入内存减少IO 
+</code></pre>
+
+<h4 id="_12">使用索引进行结果排序</h4>
+<pre><code>    *即带排序的查询是否走索引查询
+        *不走索引的内存排序，使用内存量不能超过32MB
+    *单字段索引排序，索引匹配即可
+        *可升序、降序
+    *复合索引要注意排序顺序，如{a:1,b:1}
+        *{a:1,b:1} OK
+        *{b:1,a:1} NO
+        *{a:-1,b:-1}OK
+        *{a:1,b:-1} NO
+        *{a:-1,b:1} NO
+    *使用索引前缀查询，{a:1,b:1,c:1,d:1}
+        *db.data.find().sort({a:1})  prefix{a:1}
+        *db.data.find().sort({a:-1}) prefix{a:1}
+        *db.data.find().sort({a:1,b:1}) prefix{a:1,b:1}
+        *db.data.find().sort({a:-1,b:-1}) prefix{a:1,b:1}
+        *db.data.find().sort({a:1,b:1,c:1}) prefix{a:1,b:1}
+        *db.data.find({a:{$gt:4}).sort({a:1,b:1}) prefix{a:1,b:1}
+        *db.data.find({a:5}).sort({b:1,c:1}) prefix {a:1,b:1,c:1}
+        *db.data.find({b:3,a:4}).sort({c:1}) prefix{a:1,b:1,c:1}
+        *db.data.find({a:5,b:{$lt:3}}).sort({b:1}) prefix{a:1,b:1}
+        *db.data.find({a:{$gt:2}}).sort({c:1}) 查询条件a能走索引，排序则不能
+        *db.data.find({c:5}).sort({c:1}) 查询条件和排序都不能排序
+</code></pre>
               
             </div>
           </div>
