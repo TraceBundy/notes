@@ -1,2 +1,2 @@
 # notes
-<Tracebundy.github.io/notes>
+[Note] (Tracebundy.github.io/notes)
