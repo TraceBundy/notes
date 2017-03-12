@@ -4,23 +4,35 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-03-01</lastmod>
+     <lastmod>2017-03-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
+        
     <url>
      <loc>/MongoDB-Query/</loc>
-     <lastmod>2017-03-01</lastmod>
+     <lastmod>2017-03-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>/MySQL-Select/</loc>
+     <lastmod>2017-03-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
     
 
     
     <url>
      <loc>/about/</loc>
-     <lastmod>2017-03-01</lastmod>
+     <lastmod>2017-03-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
