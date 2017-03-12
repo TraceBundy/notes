@@ -101,6 +101,16 @@
             "title": "\u4f7f\u7528\u7d22\u5f15\u8fdb\u884c\u7ed3\u679c\u6392\u5e8f"
         }, 
         {
+            "location": "/MongoDB-Pipeline/", 
+            "text": "MongoDB\u7ba1\u9053", 
+            "title": "Pipeline"
+        }, 
+        {
+            "location": "/MongoDB-Pipeline/#mongodb", 
+            "text": "", 
+            "title": "MongoDB\u7ba1\u9053"
+        }, 
+        {
             "location": "/MySQL-Select/", 
             "text": "MySQL Select \u8bed\u53e5", 
             "title": "Select"
