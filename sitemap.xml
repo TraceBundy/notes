@@ -36,6 +36,22 @@
     
 
     
+        
+    <url>
+     <loc>/leveldb-read-flow/</loc>
+     <lastmod>2017-03-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/leveldb-write-flow/</loc>
+     <lastmod>2017-03-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
     <url>
      <loc>/about/</loc>
      <lastmod>2017-03-12</lastmod>
