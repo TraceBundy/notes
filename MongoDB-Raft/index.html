@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>MongoDB&Raft - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li class="active">
+    <a href="./">MongoDB&Raft</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
+</li>
+                            
+<li >
+    <a href="../leveldb-write-flow/">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../MongoDB-Query/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../MySQL-Select/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#raftmongodb">Raft与MongoDB</a></li>
+            <li><a href="#raft">Raft协议</a></li>
+            <li><a href="#mongodbraft">MongoDB中Raft的使用</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="raftmongodb">Raft与MongoDB</h1>
+<p>本文主要介绍Raft算法以及MongoDB中Raft算法的优化以及特有的Feature</p>
+<h2 id="raft">Raft协议</h2>
+<p>Raft协议是现在比较流行的一种分布式的一致性算法，它在Paxos的基础上做了一点优化(条件的限制)来使得一致性算法更利于工程实践。下面来介绍下Raft算法</p>
+<h3 id="_1">名词</h3>
+<h4 id="term">Term 任期</h4>
+<p><code>Term</code>任期是Raft协议中比较重要的关键词。Raft协议中每个时间片都会有一个领导。那么这段时间就是一个<code>Term</code>任期。它是用来区分不同的选举尝试的，每个任期结束，集群内即会发起新一轮选举，选举可能成功或者失败。</p>
+<h4 id="leader">Leader 领导者</h4>
+<p>每个任期，都会有一个领导者。Raft协议中，领导者像Follower推日志</p>
+<h4 id="follower">Follower 跟随者</h4>
+<p>跟随者负责接收领导者的日志，同时也接收其它候选人发起的投票</p>
+<h4 id="candiatedid">CandiatedId 候选人</h4>
+<p>当每个Term任期结束，或者跟随者无法发现主节点。那么它会把自己变成候选人，向集群内发起一轮投票，尝试把自己变成领导者。</p>
+<h4 id="log">Log 日志</h4>
+<p>每一条日志都是一个用户状态机执行的指令。</p>
+<h3 id="_2">领导选举</h3>
+<p>领导选举，即是维持一个集群一致的方式。在说明选举之前，先强调几点Raft协议中存在的几种状态</p>
+<pre><code>所有服务器上持久存在的状态
+    currentTerm 服务器最后知道的任期号
+    votedFor 当前获得选票的候选人的Id
+    log[] 每个服务器收到的日志条目集
+</code></pre>
+
+<pre><code>所有服务器上经常变的状态
+    commitIndex 已知的最大的被提交的日志条目索引值
+    lastApplied 最后被应用到状态机的索引值
+</code></pre>
+
+<pre><code>在领导中经常会变的
+    nextIndex[] 对于每一个服务器，需要发送给他的下一个日志条目的索引值
+    matchIndex[] 对于每一个服务器，已经复制给它的日志最高的索引值
+</code></pre>
+
+<pre><code>附加日志
+    term 领导人日期号
+    leaderId 领导人Id
+    prevLogIndex 新的日志条目紧随之前的索引
+    prevLogTerm prevLogIndex条目的任期号
+    entries[] 准备存储的日志条目
+    leaderCommit 领导人已经提交的日志的索引值
+** 为什么需要prevLogIndex和prevLogTerm ？
+** 因为日志匹配特性，日志中两个条目拥有相同的索引和任期号，那么他们之前的所有日志都是相同的。
+返回值
+    term 当前任期号
+    success 跟随者包含了匹配上prevLogTerm和prevLogTerm为真
+</code></pre>
+
+<pre><code>    请求投票
+        term 候选人任期
+        candidateId 候选人Id
+        lastLogIndex 候选人的最后日志条目的索引值
+        lastLogTerm 候选人最后的日志条目的任期号
+    ** 为什么需要lastLogIndex lastLogTerm 
+    ** 需要判断候选人的日志是否比跟随者的日志新
+    返回值
+    term 当前任期号
+    voteGranted 候选人赢得选票为真
+</code></pre>
+
+<p>当一段时间，跟随者无法感知领导者(心跳),跟随者就会变成候选人，并向集群内其它服务器发起投票。跟随者先将自己的任期号+1，并给自己投票。重置选举超时计时器，向其它服务器发起投票。1、如果接受到大多数服务器选票，那么变成领导人。2、接收来自新的领导人的附加日志RPC，变成跟随者。如果选举超时，再次发起一轮选举</p>
+<h3 id="_3">日志复制</h3>
+<p>Raft协议中日志的复制采用领导者主动推给其它跟随者。日志有如下特性:</p>
+<pre><code>* 如果在不同的日志中的两个条目拥有相同的索引和任期号，那么他们存储了相同的指令。
+* 如果在不同的日志中的两个条目拥有相同的索引和任期号，那么他们之前的所有日志条目也全部相同。
+</code></pre>
+
+<p>这两个特性保证了日志复制的一致性。</p>
+<p><code>CandiatedId</code>候选人
+Term 任期
+用来区分不同的选举尝试，选举可能成功或失败</p>
+<p>选举期间 选举成功（正常稳定状态） 任期三可能连续选举</p>
+<h3 id="_4">集群成员变化</h3>
+<p>集群内成员的变化，采用的是两阶段的更新方式。</p>
+<pre><code>* 一阶段，切换到过渡配置，过渡配置可以达成新老集群的一致性。
+* 二阶段, 切换到新的配置
+</code></pre>
+
+<h2 id="mongodbraft">MongoDB中Raft的使用</h2>
+<p>MongoDB中复制集用到Raft。但不是完全的与论文中的实现一致。它是在Raft基础上进行优化以及新的feature
+复制集的目的是针对集群的容错和高可用性。</p>
+<pre><code>与Raft不同，MongoDB的日志复制是跟随者主动去领导者拉数据
+MongoDB中主节点发现联系不到大多数节点，则主节点不会当领导者，从节点同样监视主节点，当发现超时，即认为主节点有问题啦。发起选举。这个时间，MongoDB默认10秒。
+在选举中，有可能产生平票。
+在平票的时候，会采用10秒+随机值来再次发起选举
+</code></pre>
+
+<h3 id="mongodb">MongoDB中扩展</h3>
+<p>链式复制</p>
+<pre><code>在Raft的协议中，领导者是向跟随者推日志，这在一个集群比较大的情况下，会成为一个问题。对主节点的开销会比较大。所以MongoDB采用拉的方式。
+MongoDB中有链式复制，链式复制一般应用在审计库以及其他对实时性要求不高的情景，或跨数据中心。
+chainingAllowed = true;即允许链式复制。但注意链式复制的节点支持不参与投票。如果参与到投票，只能是从投票的节点去拉数据。
+优点:减少主节点负载。支持不投票节点
+缺点:叶子节点报告进度延时会长
+</code></pre>
+
+<h3 id="_5">优先级</h3>
+<p>考虑一种情况，在跨数据中心的集群中，大部分的用户在A数据中心，少量在B数据中心。当集群的主节点在B数据中心时，那么大部分用户的访问延时都会增大。这在业务集群中是不太可能接受的。优先级正是为解决此类问题而设计的。</p>
+<pre><code>首先，优先级只会在集群正常的情况下才有效，不会影响正常的投票环境。优先级高的节点，会在更短的时间内尝试发起选举，让自己成为Leader。
+这样保证，优先级高的节点更快的成为新的Leader。
+</code></pre>
+
+<h3 id="_6">减少回滚</h3>
+<p>在Raft的协议中，新的Leader一定是拥有最新数据的节点，如果从节点拥有的数据与从节点不一致，那么它会被回滚掉。
+但在MongoDB中，MongoDB允许Write One这种情况，即写入到一个节点即放回给客户端，这时候，有可能这条数据只在某个节点拥有。按照Raft协议中会将其回滚掉。MongoDB为了减少此类不必要的回滚(客户端选择Write One的情况)，MongoDB中做出改进，在新的主节点被选举成功后，会询问从节点是否有比它新的，这样把这些数据在主节点应用，减少不必要的回滚。</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
