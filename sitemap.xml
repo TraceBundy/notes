@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -13,13 +13,19 @@
         
     <url>
      <loc>/MongoDB-Query/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/MongoDB-Raft/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/Mongo-oplog-introduce/</loc>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -29,7 +35,7 @@
         
     <url>
      <loc>/MySQL-Select/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -39,13 +45,13 @@
         
     <url>
      <loc>/leveldb-read-flow/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/leveldb-write-flow/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -54,7 +60,7 @@
     
     <url>
      <loc>/about/</loc>
-     <lastmod>2017-03-19</lastmod>
+     <lastmod>2017-03-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

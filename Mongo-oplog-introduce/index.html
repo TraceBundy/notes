@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>MongoDB-Oplog - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Raft/">MongoDB&Raft</a>
+</li>
+                            
+<li class="active">
+    <a href="./">MongoDB-Oplog</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
+</li>
+                            
+<li >
+    <a href="../leveldb-write-flow/">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../MongoDB-Raft/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../MySQL-Select/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#oplog">Oplog详解</a></li>
+            <li><a href="#oplog_1">oplog简介</a></li>
+            <li><a href="#oplog_2">oplog日志格式分析</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="oplog">Oplog详解</h1>
+<h2 id="oplog_1">oplog简介</h2>
+<p>oplog是记录MongoDB修改操作的日志，它位于local数据下的oplog.rs表中。oplog有如下几个特性</p>
+<pre><code>* 专用的固定集合
+* 是secondary节点复制primary数据的媒介
+* 复制集成员间可相互访问oplog
+* 日志操作具有幂等性
+* 集合默认大小为
+    存储空间的5%
+    最大50GB
+    至少应该保持24小时内的数据更改
+    节点初始化后不能在线修改
+</code></pre>
+
+<p>oplog的大小有很多考量，设置太小，则有可能日志为保存24小时就被删除，日志太大，比较占用空间。oplog有点像MySQL binlog的Row格式，具有幂等性。在MySQL binlog的日志中，会将一条SQL中的多条修改操作，分别记录。想象一下，如果频繁的进行更新，这会极大的增加日志的大小。
+在这几种业务场景中就要增大oplog</p>
+<pre><code>* 一次更新多个文档时
+* 更新操作占较大比例时
+* 删除和插入操作比例相似时
+</code></pre>
+
+<h2 id="oplog_2">oplog日志格式分析</h2>
+<p>我将会对常见的几种oplog日志格式进行分析。</p>
+<h3 id="oplog_3">oplog字段</h3>
+<pre><code>&quot;ts&quot;:时间戳
+&quot;t&quot;:term 任期
+&quot;h&quot;:唯一key,标记这条日志
+&quot;v&quot;:版本号
+&quot;op&quot;:操作类型
+&quot;ns&quot;:namespace
+&quot;o&quot;:具体的操作
+</code></pre>
+
+<h4 id="_1">插入日志</h4>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490015910, 2), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;9036545109967206005&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;i&quot;, &quot;ns&quot; : &quot;test.first&quot;, &quot;o&quot; : { &quot;_id&quot; : ObjectId(&quot;58cfd6a65f4b28086ebbeb9b&quot;), &quot;a&quot; : 1, &quot;b&quot; : 2, &quot;c&quot; : 3 } }
+
+插入操作时候，”op&quot;为 i 表明是insert操作 “o&quot;表示了具体insert的数据
+</code></pre>
+
+<pre><code>{ &quot;ts&quot; : Timestamp(1490016548, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-5944877628764308640&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;u&quot;, &quot;ns&quot; : &quot;test.first&quot;, &quot;o2&quot; : { &quot;_id&quot; : ObjectId(&quot;58cfd6a65f4b28086ebbeb9b&quot;) }, &quot;o&quot; : { &quot;$set&quot; : { &quot;d&quot; : 4 } } }
+
+
+</code></pre>
+
+<p><code>op:u</code>表明是更新操作， <code>o2</code>表明的是更新数据的查询条件</p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490016548, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-5944877628764308640&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;u&quot;, &quot;ns&quot; : &quot;test.first&quot;, &quot;o2&quot; : { &quot;_id&quot; : ObjectId(&quot;58cfd6a65f4b28086ebbeb9b&quot;) }, &quot;o&quot; : { &quot;$set&quot; : { &quot;d&quot; : 4 } } }
+
+</code></pre>
+
+<p>这是更新条件是$set的情况下</p>
+<pre><code> { &quot;ts&quot; : Timestamp(1490016786, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-9134992351700501357&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;d&quot;, &quot;ns&quot; : &quot;test.first&quot;, &quot;o&quot; : { &quot;_id&quot; : ObjectId(&quot;58cfd6a65f4b28086ebbeb9b&quot;) } }
+</code></pre>
+
+<p><code>op:d</code>表明是delete操作 <code>o</code>表明要删除的数据唯一<code>_id</code></p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490018643, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;4329494339082324243&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;c&quot;, &quot;ns&quot; : &quot;test.$cmd&quot;, &quot;o&quot; : { &quot;create&quot; : &quot;second&quot;, &quot;idIndex&quot; : { &quot;v&quot; : 2, &quot;key&quot; : { &quot;_id&quot; : 1 }, &quot;name&quot; : &quot;_id_&quot;, &quot;ns&quot; : &quot;test.second&quot; } } }
+
+</code></pre>
+
+<p><code>op:c</code>表明执行的是<code>$cmd</code>操作，上面是<code>create</code>操作</p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490018767, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-8887964685293209245&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;c&quot;, &quot;ns&quot; : &quot;test.$cmd&quot;, &quot;o&quot; : { &quot;drop&quot; : &quot;second&quot; } }
+</code></pre>
+
+<p>上面是<code>drop</code>操作</p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490025693, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-922188827512825704&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;n&quot;, &quot;ns&quot; : &quot;&quot;, &quot;o&quot; : { &quot;msg&quot; : &quot;Reconfig set&quot;, &quot;version&quot; : 4 } }
+</code></pre>
+
+<pre><code>conf = rs.conf()
+conf.member[2].priority = 0;
+conf.member[2].hidden = false;
+rs.reconfig(conf);
+</code></pre>
+
+<p>我将某个从节点的hidden属性设置为true,更新配置文件后</p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490026343, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-4483740141190027818&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;n&quot;, &quot;ns&quot; : &quot;&quot;, &quot;o&quot; : { &quot;msg&quot; : &quot;Reconfig set&quot;, &quot;version&quot; : 381389 } }
+</code></pre>
+
+<pre><code>{ &quot;ts&quot; : Timestamp(1490026379, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;-3920023594043113832&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;n&quot;, &quot;ns&quot; : &quot;&quot;, &quot;o&quot; : { &quot;msg&quot; : &quot;Reconfig set&quot;, &quot;version&quot; : 381390 } }
+</code></pre>
+
+<p>这是连续两次reconf操作 两个版本号是连续的</p>
+<pre><code>{ &quot;ts&quot; : Timestamp(1490025978, 1), &quot;t&quot; : NumberLong(1), &quot;h&quot; : NumberLong(&quot;1786566620104483541&quot;), &quot;v&quot; : 2, &quot;op&quot; : &quot;n&quot;, &quot;ns&quot; : &quot;&quot;, &quot;o&quot; : { &quot;msg&quot; : &quot;Reconfig set&quot;, &quot;version&quot; : 86841 } }
+</code></pre>
+
+<p>我们将某一节点remove, 注意<code>o.version</code>版本号的变化</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
