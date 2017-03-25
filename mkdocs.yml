@@ -4,9 +4,11 @@ pages:
     - MongoDB :
         - Query : 'MongoDB-Query.md'
         - MongoDB&Raft : 'MongoDB-Raft.md'
+        - MongoDB-Oplog : 'Mongo-oplog-introduce.md'
         # - Pipeline : 'MongoDB-Pipeline.md'
     - MySQL :
         - Select : 'MySQL-Select.md'
+        - Select-Index1 : 'MySQL-Index1.md'
     - LevelDB :
         - Read : 'leveldb-read-flow.md'
         - Write : 'leveldb-write-flow.md'
