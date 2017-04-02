@@ -138,29 +138,29 @@
 <h2 id="explain">Explain 例子</h2>
 <h3 id="explain-type">Explain type</h3>
 <ul>
-<li><code>system</code>只有一行记录的系统</li>
-<li><code>const</code>最多只有一行返回记录，如主键查询</li>
+<li><code>system</code> 只有一行记录的系统</li>
+<li><code>const</code> 最多只有一行返回记录，如主键查询</li>
 <li><code>eq_ref</code> 通过唯一键进行join</li>
-<li><code>ref</code>使用普通索引进行查询</li>
-<li><code>fulltext</code>使用全文索引进行查询</li>
-<li><code>ref_or_null</code>和<code>ref</code>类似，使用普通索引进行查询，但要查询NULL值</li>
-<li><code>index_merge</code>or查询会使用到的类型</li>
-<li><code>unique_subquery</code>子查询的列是唯一索引</li>
-<li><code>index_subquery</code>子查询的列是普通索引</li>
-<li><code>range</code>范围扫描</li>
+<li><code>ref</code> 使用普通索引进行查询</li>
+<li><code>fulltext</code> 使用全文索引进行查询</li>
+<li><code>ref_or_null</code> 和 <code>ref</code> 类似，使用普通索引进行查询，但要查询NULL值</li>
+<li><code>index_merge</code> or查询会使用到的类型</li>
+<li><code>unique_subquery</code> 子查询的列是唯一索引</li>
+<li><code>index_subquery</code> 子查询的列是普通索引</li>
+<li><code>range</code> 范围扫描</li>
 <li><code>index</code> 索引扫描</li>
 <li><code>ALL</code> 全表扫描</li>
 </ul>
 <h3 id="explain-extra">Explain Extra</h3>
 <ul>
-<li>using filesort 使用额外的排序得到结果</li>
-<li>using index 优化器只需要使用索引就能得到结果</li>
-<li>using index condition 优化器使用index condition pushdown 优化</li>
-<li>using index for group by 优化器只需要使用索引就能处理group by 或distinct</li>
-<li>using join buffer 优化器需要使用join buffer join_buffer_size</li>
-<li>using mrr 优化器使用MRR优化</li>
-<li>using temporary 优化器需要使用临时表</li>
-<li>using where 优化器使用wher过滤</li>
+<li><code>using filesort</code> 使用额外的排序得到结果</li>
+<li><code>using index</code> 优化器只需要使用索引就能得到结果</li>
+<li><code>using index condition</code> 优化器使用index condition pushdown 优化</li>
+<li><code>using index for group by</code> 优化器只需要使用索引就能处理group by 或distinct</li>
+<li><code>using join buffer</code> 优化器需要使用join buffer join_buffer_size</li>
+<li><code>using mrr</code> 优化器使用MRR优化</li>
+<li><code>using temporary</code> 优化器需要使用临时表</li>
+<li><code>using where</code> 优化器使用wher过滤</li>
 </ul>
 <p>下面的例子大概常见的复杂例子啦</p>
 <pre><code>(root@localhost) [dbt3]&gt;explain SELECT      * FROM     part WHERE     p_partkey IN (SELECT              l_partkey         FROM             lineitem         WHERE             l_shipdate BETWEEN '1997-01-01' AND '1997-02-01') ORDER BY p_retailprice DESC LIMIT 10;
