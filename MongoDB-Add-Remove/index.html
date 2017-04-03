@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>MongoDB-Add-Remove - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Raft/">MongoDB&Raft</a>
+</li>
+                            
+<li >
+    <a href="../Mongo-oplog-introduce/">MongoDB-Oplog</a>
+</li>
+                            
+<li class="active">
+    <a href="./">MongoDB-Add-Remove</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Index1/">Select-Index1</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Fulltext/">Select-Fulltext</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Explain/">Select-Explain</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
+</li>
+                            
+<li >
+    <a href="../leveldb-write-flow/">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../Mongo-oplog-introduce/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../MySQL-Select/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#mongodb">通过日志看MongoDB复制集</a></li>
+            <li><a href="#_1">复制集状态</a></li>
+            <li><a href="#rsremove12700147020">删除节点 rs.remove('127.0.0.1:47020')</a></li>
+            <li><a href="#rsadd12700147020">新增节点rs.add('127.0.0.1:47020')</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h2 id="mongodb">通过日志看MongoDB复制集</h2>
+<h3 id="_1">复制集状态</h3>
+<pre><code>yang:PRIMARY&gt; rs.conf()
+{
+    &quot;_id&quot; : &quot;yang&quot;,
+    &quot;version&quot; : 596618,
+    &quot;protocolVersion&quot; : NumberLong(1),
+    &quot;members&quot; : [
+        {
+            &quot;_id&quot; : 0,
+            &quot;host&quot; : &quot;127.0.0.1:47017&quot;,
+            &quot;arbiterOnly&quot; : false,
+            &quot;buildIndexes&quot; : true,
+            &quot;hidden&quot; : false,
+            &quot;priority&quot; : 1,
+            &quot;tags&quot; : {
+
+            },
+            &quot;slaveDelay&quot; : NumberLong(0),
+            &quot;votes&quot; : 1
+        },
+        {
+            &quot;_id&quot; : 1,
+            &quot;host&quot; : &quot;127.0.0.1:47018&quot;,
+            &quot;arbiterOnly&quot; : false,
+            &quot;buildIndexes&quot; : true,
+            &quot;hidden&quot; : false,
+            &quot;priority&quot; : 1,
+            &quot;tags&quot; : {
+
+            },
+            &quot;slaveDelay&quot; : NumberLong(0),
+            &quot;votes&quot; : 1
+        },
+        {
+            &quot;_id&quot; : 2,
+            &quot;host&quot; : &quot;127.0.0.1:47019&quot;,
+            &quot;arbiterOnly&quot; : false,
+            &quot;buildIndexes&quot; : true,
+            &quot;hidden&quot; : false,
+            &quot;priority&quot; : 0,
+            &quot;tags&quot; : {
+
+            },
+            &quot;slaveDelay&quot; : NumberLong(0),
+            &quot;votes&quot; : 1
+        },
+        {
+            &quot;_id&quot; : 3,
+            &quot;host&quot; : &quot;127.0.0.1:47020&quot;,
+            &quot;arbiterOnly&quot; : false,
+            &quot;buildIndexes&quot; : true,
+            &quot;hidden&quot; : false,
+            &quot;priority&quot; : 1,
+            &quot;tags&quot; : {
+
+            },
+            &quot;slaveDelay&quot; : NumberLong(0),
+            &quot;votes&quot; : 1
+        }
+    ],
+    &quot;settings&quot; : {
+        &quot;chainingAllowed&quot; : true,
+        &quot;heartbeatIntervalMillis&quot; : 2000,
+        &quot;heartbeatTimeoutSecs&quot; : 10,
+        &quot;electionTimeoutMillis&quot; : 10000,
+        &quot;catchUpTimeoutMillis&quot; : 2000,
+        &quot;getLastErrorModes&quot; : {
+
+        },
+        &quot;getLastErrorDefaults&quot; : {
+            &quot;w&quot; : 1,
+            &quot;wtimeout&quot; : 0
+        },
+        &quot;replicaSetId&quot; : ObjectId(&quot;58cb8266e5b9b869aa17a523&quot;)
+    }
+}
+</code></pre>
+
+<h3 id="rsremove12700147020">删除节点 rs.remove('127.0.0.1:47020')</h3>
+<pre><code>2017-04-03T07:59:59.209+0000 I REPL     [replication-166] Choosing new sync source because the config version supplied by 127.0.0.1:47017, 596617, does not match ours, 596616
+2017-04-03T07:59:59.210+0000 I REPL     [replication-166] Canceling oplog query because we have to choose a new sync source. Current source: 127.0.0.1:47017, OpTime { ts: Timestamp 0|0, t: -1 }, its sync source index:-1
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] fetcher stopped reading remote oplog on 127.0.0.1:47017
+2017-04-03T07:59:59.210+0000 W REPL     [rsBackgroundSync] Fetcher stopped querying remote oplog with error: InvalidSyncSource: sync source 127.0.0.1:47017 (last visible optime: { ts: Timestamp 0|0, t: -1 }; config version: 596617; sync source index: -1; primary index: 0) is no longer valid
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491206399000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491206394000|1, t: 1 }
+2017-04-03T07:59:59.210+0000 I REPL     [rsBackgroundSync] could not find member to sync from
+2017-04-03T07:59:59.210+0000 D REPL     [replication-165] Reporter found newer configuration on sync source: 127.0.0.1:47017. Retrying.
+2017-04-03T07:59:59.211+0000 D REPL     [ReplicationExecutor] Received new config via heartbeat with version 596617
+2017-04-03T07:59:59.211+0000 D NETWORK  [replExecDBWorker-2] connected to server 127.0.0.1:47017 (127.0.0.1)
+2017-04-03T07:59:59.213+0000 I COMMAND  [conn7] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596616, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T07:59:59.213+0000 I REPL     [SyncSourceFeedback] SyncSourceFeedback error sending update to 127.0.0.1:47017: InvalidSyncSource: Sync source was cleared. Was 127.0.0.1:47017
+2017-04-03T07:59:59.213+0000 D REPL     [SyncSourceFeedback] The replication progress command (replSetUpdatePosition) failed and will be retried: InvalidSyncSource: Sync source was cleared. Was 127.0.0.1:47017
+2017-04-03T07:59:59.214+0000 I COMMAND  [conn8] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596616, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T07:59:59.216+0000 D NETWORK  [replExecDBWorker-2] connected to server 127.0.0.1:47018 (127.0.0.1)
+2017-04-03T07:59:59.218+0000 D NETWORK  [replExecDBWorker-2] connected to server 127.0.0.1:47019 (127.0.0.1)
+2017-04-03T07:59:59.220+0000 I REPL     [ReplicationExecutor] Cannot find self in new replica set configuration; I must be removed; NodeNotFound: No host described in new configuration 596617 for replica set yang maps to this node
+2017-04-03T07:59:59.220+0000 I REPL     [ReplicationExecutor] New replica set config in use: { _id: &quot;yang&quot;, version: 596617, protocolVersion: 1, members: [ { _id: 0, host: &quot;127.0.0.1:47017&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 1, host: &quot;127.0.0.1:47018&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 2, host: &quot;127.0.0.1:47019&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 0.0, tags: {}, slaveDelay: 0, votes: 1 } ], settings: { chainingAllowed: true, heartbeatIntervalMillis: 2000, heartbeatTimeoutSecs: 10, electionTimeoutMillis: 10000, catchUpTimeoutMillis: 2000, getLastErrorModes: {}, getLastErrorDefaults: { w: 1, wtimeout: 0 }, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523') } }
+2017-04-03T07:59:59.220+0000 I REPL     [ReplicationExecutor] This node is not a member of the config
+2017-04-03T07:59:59.220+0000 I REPL     [ReplicationExecutor] transition to REMOVED
+2017-04-03T07:59:59.220+0000 I NETWORK  [ReplicationExecutor] legacy transport layer closing all connections
+2017-04-03T07:59:59.220+0000 I NETWORK  [ReplicationExecutor] Skip closing connection for connection # 11
+2017-04-03T07:59:59.220+0000 I NETWORK  [ReplicationExecutor] Skip closing connection for connection # 8
+2017-04-03T07:59:59.220+0000 I NETWORK  [ReplicationExecutor] Skip closing connection for connection # 7
+2017-04-03T08:00:00.210+0000 D REPL     [rsBackgroundSync] Cannot sync from any members because we are not in the replica set config
+2017-04-03T08:00:01.211+0000 D REPL     [rsBackgroundSync] Cannot sync from any members because we are not in the replica set config
+</code></pre>
+
+<p>可以看到:
+<em> <code>47020</code>节点发现自己的版本<code>596616</code>不是最新版本<code>596617</code>，取消当前的复制源，选择新的复制源
+</em> 向<code>47017</code>,<code>47018</code>,<code>47019</code>查找同步源
+<em> 发现找不到成员来复制
+</em> 请求新的配置信息，发现自己不在复制集当中
+* 关闭所有传输连接</p>
+<h3 id="rsadd12700147020">新增节点rs.add('127.0.0.1:47020')</h3>
+<p><code>47020</code>日志</p>
+<pre><code>2017-04-03T08:50:25.800+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:39076 #30 (0 connections now open)
+2017-04-03T08:50:25.801+0000 I COMMAND  [conn30] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.801+0000 I -        [conn30] end connection 127.0.0.1:39076 (4 connections now open)
+2017-04-03T08:50:25.801+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, pv: 1, v: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, checkEmpty: false } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.803+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.807+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.807+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.808+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:39086 #31 (0 connections now open)
+2017-04-03T08:50:25.809+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:39088 #32 (1 connection now open)
+2017-04-03T08:50:25.809+0000 I COMMAND  [conn31] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.809+0000 I COMMAND  [conn32] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.810+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.810+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.811+0000 D REPL     [ReplicationExecutor] Received new config via heartbeat with version 596622
+2017-04-03T08:50:25.811+0000 D NETWORK  [replExecDBWorker-0] connected to server 127.0.0.1:47017 (127.0.0.1)
+2017-04-03T08:50:25.811+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.811+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.811+0000 I -        [conn31] end connection 127.0.0.1:39086 (5 connections now open)
+2017-04-03T08:50:25.811+0000 D NETWORK  [replExecDBWorker-0] connected to server 127.0.0.1:47018 (127.0.0.1)
+2017-04-03T08:50:25.812+0000 D REPL     [ReplicationExecutor] Ignoring new configuration with version 596622 because already in the midst of a configuration process
+2017-04-03T08:50:25.812+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.812+0000 D NETWORK  [replExecDBWorker-0] connected to server 127.0.0.1:47019 (127.0.0.1)
+2017-04-03T08:50:25.812+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:352 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.812+0000 I -        [conn32] end connection 127.0.0.1:39088 (4 connections now open)
+2017-04-03T08:50:25.813+0000 I REPL     [ReplicationExecutor] New replica set config in use: { _id: &quot;yang&quot;, version: 596622, protocolVersion: 1, members: [ { _id: 0, host: &quot;127.0.0.1:47017&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 1, host: &quot;127.0.0.1:47018&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 2, host: &quot;127.0.0.1:47019&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 0.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 3, host: &quot;127.0.0.1:47020&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 } ], settings: { chainingAllowed: true, heartbeatIntervalMillis: 2000, heartbeatTimeoutSecs: 10, electionTimeoutMillis: 10000, catchUpTimeoutMillis: 2000, getLastErrorModes: {}, getLastErrorDefaults: { w: 1, wtimeout: 0 }, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523') } }
+2017-04-03T08:50:25.813+0000 I REPL     [ReplicationExecutor] This node is 127.0.0.1:47020 in the config
+2017-04-03T08:50:25.813+0000 I REPL     [ReplicationExecutor] transition to SECONDARY
+2017-04-03T08:50:25.881+0000 I REPL     [rsBackgroundSync] sync source candidate: 127.0.0.1:47019
+2017-04-03T08:50:25.881+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Connecting to 127.0.0.1:47019
+2017-04-03T08:50:25.882+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Successfully connected to 127.0.0.1:47019
+2017-04-03T08:50:25.883+0000 D REPL     [rsBackgroundSync] scheduling fetcher to read remote oplog on 127.0.0.1:47019 starting at filter: { ts: { $gte: Timestamp 1491209286000|1 } }
+2017-04-03T08:50:25.883+0000 D REPL     [SyncSourceFeedback] setting syncSourceFeedback to 127.0.0.1:47019
+2017-04-03T08:50:25.884+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Connecting to 127.0.0.1:47019
+2017-04-03T08:50:25.885+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Successfully connected to 127.0.0.1:47019
+2017-04-03T08:50:25.885+0000 D REPL     [replication-169] oplog fetcher successfully fetched from 127.0.0.1:47019
+2017-04-03T08:50:25.886+0000 D EXECUTOR [replication-172] starting thread in pool replication
+2017-04-03T08:50:25.887+0000 I REPL     [replication-169] Choosing new sync source because our current sync source, 127.0.0.1:47019, has an OpTime ({ ts: Timestamp 1491209425000|1, t: 1 }) which is not ahead of ours ({ ts: Timestamp 1491209425000|1, t: 1 }), it does not have a sync source, and it's not the primary (127.0.0.1:47017 is)
+2017-04-03T08:50:25.887+0000 I REPL     [replication-169] Canceling oplog query because we have to choose a new sync source. Current source: 127.0.0.1:47019, OpTime { ts: Timestamp 0|0, t: -1 }, its sync source index:-1
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] fetcher stopped reading remote oplog on 127.0.0.1:47019
+2017-04-03T08:50:25.887+0000 W REPL     [rsBackgroundSync] Fetcher stopped querying remote oplog with error: InvalidSyncSource: sync source 127.0.0.1:47019 (last visible optime: { ts: Timestamp 0|0, t: -1 }; config version: 596622; sync source index: -1; primary index: 0) is no longer valid
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:25.887+0000 I REPL     [rsBackgroundSync] could not find member to sync from
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:26.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.808+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:27.888+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:27.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:28.889+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.809+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:29.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.812+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:30.812+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:30.888+0000 I REPL     [SyncSourceFeedback] SyncSourceFeedback error sending update to 127.0.0.1:47019: InvalidSyncSource: Sync source was cleared. Was 127.0.0.1:47019
+2017-04-03T08:50:30.888+0000 D REPL     [SyncSourceFeedback] The replication progress command (replSetUpdatePosition) failed and will be retried: InvalidSyncSource: Sync source was cleared. Was 127.0.0.1:47019
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:30.890+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.810+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:31.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:32.891+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.813+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:33.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.895+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.815+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:35.822+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:35.831+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:35.897+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:36.898+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.830+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:37.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:38.899+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.831+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:39.901+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:39.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.830+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:40.832+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:40.902+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.833+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:41.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:42.903+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.835+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:43.904+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47017: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:44.905+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:45.832+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.833+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.837+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:384 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.906+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47018: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:45.906+0000 D REPL     [rsBackgroundSync] Cannot select sync source equal to or behind our last fetched optime. My last fetched oplog optime: { ts: Timestamp 1491209425000|1, t: 1 }, latest oplog optime of sync candidate 127.0.0.1:47019: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:45.906+0000 I REPL     [rsBackgroundSync] sync source candidate: 127.0.0.1:47017
+2017-04-03T08:50:45.908+0000 D REPL     [rsBackgroundSync] scheduling fetcher to read remote oplog on 127.0.0.1:47017 starting at filter: { ts: { $gte: Timestamp 1491209425000|1 } }
+2017-04-03T08:50:45.908+0000 D REPL     [SyncSourceFeedback] setting syncSourceFeedback to 127.0.0.1:47017
+2017-04-03T08:50:45.910+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Connecting to 127.0.0.1:47017
+2017-04-03T08:50:45.911+0000 D REPL     [replication-172] oplog fetcher successfully fetched from 127.0.0.1:47017
+2017-04-03T08:50:45.911+0000 I ASIO     [NetworkInterfaceASIO-RS-0] Successfully connected to 127.0.0.1:47017
+2017-04-03T08:50:47.838+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:415 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:49.838+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:415 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.834+0000 I COMMAND  [conn24] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:415 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.835+0000 I COMMAND  [conn25] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:415 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:51.838+0000 I COMMAND  [conn21] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47017&quot;, fromId: 0, term: 1 } numYields:0 reslen:415 locks:{} protocol:op_command 0ms
+
+</code></pre>
+
+<ul>
+<li>发现新的配置</li>
+<li>更新复制源，选择主节点<code>47017</code></li>
+<li>同步更新</li>
+</ul>
+<p><code>47017</code>日志</p>
+<pre><code>2017-04-03T08:50:25.799+0000 I REPL     [conn1607] replSetReconfig admin command received from client
+2017-04-03T08:50:25.799+0000 D NETWORK  [conn1607] connected to server 127.0.0.1:47018 (127.0.0.1)
+2017-04-03T08:50:25.800+0000 D NETWORK  [conn1607] connected to server 127.0.0.1:47019 (127.0.0.1)
+2017-04-03T08:50:25.800+0000 D NETWORK  [conn1607] connected to server 127.0.0.1:47020 (127.0.0.1)
+2017-04-03T08:50:25.801+0000 I REPL     [conn1607] replSetReconfig config object with 4 members parses ok
+2017-04-03T08:50:25.801+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.802+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.802+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;&quot;, fromId: -1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.802+0000 I REPL     [ReplicationExecutor] New replica set config in use: { _id: &quot;yang&quot;, version: 596622, protocolVersion: 1, members: [ { _id: 0, host: &quot;127.0.0.1:47017&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 1, host: &quot;127.0.0.1:47018&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 2, host: &quot;127.0.0.1:47019&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 0.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 3, host: &quot;127.0.0.1:47020&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 } ], settings: { chainingAllowed: true, heartbeatIntervalMillis: 2000, heartbeatTimeoutSecs: 10, electionTimeoutMillis: 10000, catchUpTimeoutMillis: 2000, getLastErrorModes: {}, getLastErrorDefaults: { w: 1, wtimeout: 0 }, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523') } }
+2017-04-03T08:50:25.802+0000 I REPL     [ReplicationExecutor] This node is 127.0.0.1:47017 in the config
+2017-04-03T08:50:25.803+0000 I COMMAND  [conn1607] command local.system.replset appName: &quot;MongoDB Shell&quot; command: replSetReconfig { replSetReconfig: { _id: &quot;yang&quot;, version: 596622, protocolVersion: 1, members: [ { _id: 0, host: &quot;127.0.0.1:47017&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 1, host: &quot;127.0.0.1:47018&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 1.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 2, host: &quot;127.0.0.1:47019&quot;, arbiterOnly: false, buildIndexes: true, hidden: false, priority: 0.0, tags: {}, slaveDelay: 0, votes: 1 }, { _id: 3.0, host: &quot;127.0.0.1:47020&quot; } ], settings: { chainingAllowed: true, heartbeatIntervalMillis: 2000, heartbeatTimeoutSecs: 10, electionTimeoutMillis: 10000, catchUpTimeoutMillis: 2000, getLastErrorModes: {}, getLastErrorDefaults: { w: 1, wtimeout: 0 }, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523') } } } numYields:0 reslen:22 locks:{ Global: { acquireCount: { r: 3, w: 2, W: 1 } }, Database: { acquireCount: { w: 1, W: 1 } }, Metadata: { acquireCount: { w: 1 } }, oplog: { acquireCount: { w: 1 } } } protocol:op_command 3ms
+2017-04-03T08:50:25.803+0000 I COMMAND  [conn1584] command local.oplog.rs command: getMore { getMore: 18039023204, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209424000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209286000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:18039023204 keysExamined:0 docsExamined:1 numYields:1 nreturned:1 reslen:403 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 1161ms
+2017-04-03T08:50:25.803+0000 I COMMAND  [conn1611] command local.oplog.rs command: getMore { getMore: 17706529349, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209424000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209286000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17706529349 keysExamined:0 docsExamined:1 numYields:1 nreturned:1 reslen:403 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 1160ms
+2017-04-03T08:50:25.803+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:1288 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.804+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:1288 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.804+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:45796 #1612 (12 connections now open)
+2017-04-03T08:50:25.804+0000 D REPL     [conn1611] Received replSetUpdatePosition for node with memberId 1 whose config version of 596621 doesn't match our config version of 596622
+2017-04-03T08:50:25.805+0000 I COMMAND  [conn1611] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209414000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209414000|1, t: 1 }, memberId: 1, cfgver: 596621 }, { durableOpTime: { ts: Timestamp 1491209424000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596621 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209424000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596621, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:235 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.805+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:45798 #1613 (13 connections now open)
+2017-04-03T08:50:25.805+0000 I REPL     [ReplicationExecutor] Error in heartbeat request to 127.0.0.1:47020; InvalidReplicaSetConfig: Our replica set configuration is invalid or does not include us
+2017-04-03T08:50:25.806+0000 I COMMAND  [conn1607] command admin.$cmd appName: &quot;MongoDB Shell&quot; command: replSetGetStatus { replSetGetStatus: 1.0, forShell: 1.0 } numYields:0 reslen:1514 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.806+0000 I COMMAND  [conn1599] command local.oplog.rs command: killCursors { killCursors: &quot;oplog.rs&quot;, cursors: [ 18039023204 ] } numYields:0 reslen:115 locks:{ Global: { acquireCount: { r: 2 } }, Database: { acquireCount: { r: 1 } }, oplog: { acquireCount: { r: 1 } } } protocol:op_command 0ms
+2017-04-03T08:50:25.806+0000 D REPL     [conn1584] Received replSetUpdatePosition for node with memberId 1 whose config version of 596621 doesn't match our config version of 596622
+2017-04-03T08:50:25.806+0000 I COMMAND  [conn1584] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209424000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596621 }, { durableOpTime: { ts: Timestamp 1491209414000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209414000|1, t: 1 }, memberId: 2, cfgver: 596621 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209424000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596621, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:235 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.806+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:1288 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.807+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596621, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:1288 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.807+0000 I REPL     [ReplicationExecutor] Error in heartbeat request to 127.0.0.1:47020; InvalidReplicaSetConfig: Our replica set configuration is invalid or does not include us
+2017-04-03T08:50:25.807+0000 I COMMAND  [conn1611] command local.oplog.rs command: killCursors { killCursors: &quot;oplog.rs&quot;, cursors: [ 17706529349 ] } numYields:0 reslen:115 locks:{ Global: { acquireCount: { r: 2 } }, Database: { acquireCount: { r: 1 } }, oplog: { acquireCount: { r: 1 } } } protocol:op_command 0ms
+2017-04-03T08:50:25.807+0000 I COMMAND  [conn1612] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.808+0000 I REPL     [ReplicationExecutor] Error in heartbeat request to 127.0.0.1:47020; InvalidReplicaSetConfig: Our replica set configuration is invalid or does not include us
+2017-04-03T08:50:25.808+0000 D REPL     [ReplicationExecutor] setDownValues: heartbeat response failed for member _id:3, msg:  Our replica set configuration is invalid or does not include us
+2017-04-03T08:50:25.808+0000 I -        [conn1612] end connection 127.0.0.1:45796 (13 connections now open)
+2017-04-03T08:50:25.808+0000 I COMMAND  [conn1613] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.808+0000 I -        [conn1613] end connection 127.0.0.1:45798 (12 connections now open)
+2017-04-03T08:50:25.810+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.810+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.811+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:45808 #1614 (12 connections now open)
+2017-04-03T08:50:25.811+0000 I COMMAND  [conn1614] command admin.$cmd command: _isSelf { _isSelf: 1 } numYields:0 reslen:53 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:25.811+0000 I -        [conn1614] end connection 127.0.0.1:45808 (12 connections now open)
+2017-04-03T08:50:25.813+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:25.888+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:27.809+0000 I REPL     [ReplicationExecutor] Member 127.0.0.1:47020 is now in state SECONDARY
+2017-04-03T08:50:30.811+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:30.813+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:30.889+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:34.638+0000 D REPL     [NoopWriter] Not scheduling a noop write. Last known OpTime: { ts: Timestamp 1491209424000|1, t: 1 } != last primary OpTime: { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:34.638+0000 D REPL     [NoopWriter] Set last known op time to { ts: Timestamp 1491209425000|1, t: 1 }
+2017-04-03T08:50:35.814+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:35.824+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:35.892+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:40.830+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:40.830+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:40.894+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:44.638+0000 D REPL     [NoopWriter] Writing noop to oplog as there has been no writes to this replica set in over 10s
+2017-04-03T08:50:44.638+0000 D REPL     [NoopWriter] Set last known op time to { ts: Timestamp 1491209444000|1, t: 1 }
+2017-04-03T08:50:45.832+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.832+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.896+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.907+0000 I COMMAND  [conn1606] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, limit: 1, sort: { $natural: 1 } } planSummary: COLLSCAN keysExamined:0 docsExamined:1 cursorExhausted:1 numYields:0 nreturned:1 reslen:176 locks:{ Global: { acquireCount: { r: 2 } }, Database: { acquireCount: { r: 1 } }, oplog: { acquireCount: { r: 1 } } } protocol:op_command 0ms
+2017-04-03T08:50:45.910+0000 D WRITE    [conn1606] Caught WriteConflictException doing plan execution on local.oplog.rs, attempt: 1 retrying
+2017-04-03T08:50:45.910+0000 I NETWORK  [thread1] connection accepted from 127.0.0.1:45818 #1615 (12 connections now open)
+2017-04-03T08:50:45.910+0000 I COMMAND  [conn1606] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:20238866293 keysExamined:0 docsExamined:2 writeConflicts:1 numYields:1 nreturned:2 reslen:503 locks:{ Global: { acquireCount: { r: 4 } }, Database: { acquireCount: { r: 2 } }, oplog: { acquireCount: { r: 2 } } } protocol:op_command 0ms
+2017-04-03T08:50:45.911+0000 I COMMAND  [conn1606] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209424000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.911+0000 I NETWORK  [conn1615] received client metadata from 127.0.0.1:45818 conn1615: { driver: { name: &quot;NetworkInterfaceASIO-RS&quot;, version: &quot;3.4.2&quot; }, os: { type: &quot;Linux&quot;, name: &quot;Ubuntu&quot;, architecture: &quot;x86_64&quot;, version: &quot;14.04&quot; } }
+2017-04-03T08:50:45.911+0000 I COMMAND  [conn1615] command admin.$cmd command: isMaster { isMaster: 1, hangUpOnStepDown: false, client: { driver: { name: &quot;NetworkInterfaceASIO-RS&quot;, version: &quot;3.4.2&quot; }, os: { type: &quot;Linux&quot;, name: &quot;Ubuntu&quot;, architecture: &quot;x86_64&quot;, version: &quot;14.04&quot; } }, internalClient: { minWireVersion: 0, maxWireVersion: 5 } } numYields:0 reslen:506 locks:{} protocol:op_query 0ms
+2017-04-03T08:50:45.912+0000 I COMMAND  [conn1615] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:45.914+0000 I COMMAND  [conn1606] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.826+0000 I COMMAND  [conn1584] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, limit: 1, sort: { $natural: 1 } } planSummary: COLLSCAN keysExamined:0 docsExamined:1 cursorExhausted:1 numYields:0 nreturned:1 reslen:176 locks:{ Global: { acquireCount: { r: 2 } }, Database: { acquireCount: { r: 1 } }, oplog: { acquireCount: { r: 1 } } } protocol:op_command 0ms
+2017-04-03T08:50:46.827+0000 I COMMAND  [conn1611] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, limit: 1, sort: { $natural: 1 } } planSummary: COLLSCAN keysExamined:0 docsExamined:1 cursorExhausted:1 numYields:0 nreturned:1 reslen:176 locks:{ Global: { acquireCount: { r: 2 } }, Database: { acquireCount: { r: 1 } }, oplog: { acquireCount: { r: 1 } } } protocol:op_command 0ms
+2017-04-03T08:50:46.828+0000 D WRITE    [conn1584] Caught WriteConflictException doing plan execution on local.oplog.rs, attempt: 1 retrying
+2017-04-03T08:50:46.828+0000 I COMMAND  [conn1584] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17982294656 keysExamined:0 docsExamined:2 writeConflicts:1 numYields:1 nreturned:2 reslen:503 locks:{ Global: { acquireCount: { r: 4 } }, Database: { acquireCount: { r: 2 } }, oplog: { acquireCount: { r: 2 } } } protocol:op_command 0ms
+2017-04-03T08:50:46.829+0000 I COMMAND  [conn1595] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209424000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.830+0000 I COMMAND  [conn1599] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209424000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.830+0000 D WRITE    [conn1611] Caught WriteConflictException doing plan execution on local.oplog.rs, attempt: 1 retrying
+2017-04-03T08:50:46.830+0000 I COMMAND  [conn1611] command local.oplog.rs command: find { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17466975013 keysExamined:0 docsExamined:2 writeConflicts:1 numYields:1 nreturned:2 reslen:503 locks:{ Global: { acquireCount: { r: 4 } }, Database: { acquireCount: { r: 2 } }, oplog: { acquireCount: { r: 2 } } } protocol:op_command 0ms
+2017-04-03T08:50:46.834+0000 I COMMAND  [conn1584] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.835+0000 I COMMAND  [conn1595] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.836+0000 I COMMAND  [conn1584] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:46.836+0000 I COMMAND  [conn1615] command local.oplog.rs command: getMore { getMore: 20238866293, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209425000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:20238866293 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 922ms
+2017-04-03T08:50:46.837+0000 I COMMAND  [conn1599] command local.oplog.rs command: getMore { getMore: 17982294656, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209425000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17982294656 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 3ms
+2017-04-03T08:50:46.837+0000 I COMMAND  [conn1611] command local.oplog.rs command: getMore { getMore: 17466975013, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209425000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17466975013 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 3ms
+2017-04-03T08:50:46.838+0000 I COMMAND  [conn1595] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209425000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209425000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.834+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.835+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.896+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:50.916+0000 I COMMAND  [conn1606] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209444000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:51.837+0000 I COMMAND  [conn1615] command local.oplog.rs command: getMore { getMore: 20238866293, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209444000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:20238866293 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 5000ms
+2017-04-03T08:50:51.839+0000 I COMMAND  [conn1584] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209444000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:51.839+0000 I COMMAND  [conn1611] command local.oplog.rs command: getMore { getMore: 17466975013, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209444000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17466975013 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 5000ms
+2017-04-03T08:50:51.839+0000 I COMMAND  [conn1599] command local.oplog.rs command: getMore { getMore: 17982294656, collection: &quot;oplog.rs&quot;, maxTimeMS: 5000, term: 1, lastKnownCommittedOpTime: { ts: Timestamp 1491209444000|1, t: 1 } } originatingCommand: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp 1491209425000|1 } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 60000, term: 1 } planSummary: COLLSCAN cursorid:17982294656 keysExamined:0 docsExamined:0 numYields:1 nreturned:0 reslen:292 locks:{ Global: { acquireCount: { r: 6 } }, Database: { acquireCount: { r: 3 } }, oplog: { acquireCount: { r: 3 } } } protocol:op_command 5000ms
+2017-04-03T08:50:51.839+0000 I COMMAND  [conn1595] command admin.$cmd command: replSetUpdatePosition { replSetUpdatePosition: 1, optimes: [ { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 1, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 2, cfgver: 596622 }, { durableOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, appliedOpTime: { ts: Timestamp 1491209444000|1, t: 1 }, memberId: 3, cfgver: 596622 } ], $replData: { term: 1, lastOpCommitted: { ts: Timestamp 1491209444000|1, t: 1 }, lastOpVisible: { ts: Timestamp 0|0, t: -1 }, configVersion: 596622, replicaSetId: ObjectId('58cb8266e5b9b869aa17a523'), primaryIndex: 0, syncSourceIndex: 0 } } numYields:0 reslen:22 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:52.840+0000 I COMMAND  [conn1589] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47019&quot;, fromId: 2, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:52.841+0000 I COMMAND  [conn1583] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47018&quot;, fromId: 1, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+2017-04-03T08:50:52.897+0000 I COMMAND  [conn1588] command admin.$cmd command: replSetHeartbeat { replSetHeartbeat: &quot;yang&quot;, configVersion: 596622, from: &quot;127.0.0.1:47020&quot;, fromId: 3, term: 1 } numYields:0 reslen:406 locks:{} protocol:op_command 0ms
+</code></pre>
+
+<ul>
+<li>收到客户端请求</li>
+<li>更新复制集配置</li>
+<li>接收到<code>47020</code>复制请求</li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

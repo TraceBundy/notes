@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -13,19 +13,25 @@
         
     <url>
      <loc>/MongoDB-Query/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/MongoDB-Raft/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/Mongo-oplog-introduce/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/MongoDB-Add-Remove/</loc>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -35,25 +41,25 @@
         
     <url>
      <loc>/MySQL-Select/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/MySQL-Index1/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/MySQL-Fulltext/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/MySQL-Explain/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -63,13 +69,13 @@
         
     <url>
      <loc>/leveldb-read-flow/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/leveldb-write-flow/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -78,7 +84,7 @@
     
     <url>
      <loc>/about/</loc>
-     <lastmod>2017-04-02</lastmod>
+     <lastmod>2017-04-03</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
