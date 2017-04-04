@@ -166,15 +166,15 @@
 </li>
 <li>
 <p>心跳互探
-    默认2秒一次心跳、10秒心跳超时，若超时，则判断该节点不可访问
-    ```
-        "settings" : {
-        "chainingAllowed" : true,
-        "heartbeatIntervalMillis" : 2000, 心跳
-        "heartbeatTimeoutSecs" : 10,心跳超时
-        "electionTimeoutMillis" : 10000,
-        "catchUpTimeoutMillis" : 2000, 从其它节点拉数据的超时时间
-        "getLastErrorModes" : {</p>
+    默认2秒一次心跳、10秒心跳超时，若超时，则判断该节点不可访问</p>
+<p>```
+    "settings" : {
+    "chainingAllowed" : true,
+    "heartbeatIntervalMillis" : 2000, 心跳
+    "heartbeatTimeoutSecs" : 10,心跳超时
+    "electionTimeoutMillis" : 10000,
+    "catchUpTimeoutMillis" : 2000, 从其它节点拉数据的超时时间
+    "getLastErrorModes" : {</p>
 <pre><code>}
 </code></pre>
 <p>```
@@ -196,29 +196,33 @@
     "votes" : 1
 }
 </code></pre>
-<p>```
-* 跨数据中心
-    * 数据中心失联，另一个数据中心的节点会重新选举
-    * 确保选出的新primary跟应用在同一个数据中心</p>
-<pre><code>```
-    最热门的莫过于`两地三中心` ,就是同城有两个数据中心，异地有一个数据中心来进行灾备。例如: 北京有两个数据中心， 每个数据中心有两个副本，异地杭州有一个副本。这时候我们就需要用到priority来进行选举的优化。使同一个数据中心的具有相同有priority， 可设BJ.DC1(priority=2), BJ.DC2(priority=1), HZ.DC3(priority=0)这样当主节点挂掉，新主会在同一数据中心、或者同城数据中心来选出。
-```
-</code></pre>
+<p>```</p>
 <ul>
-<li>网络分区时<ul>
-<li>primary 只能连接上少数节点时，会step down 为secondary</li>
-<li>secondary 发现无primary 时， 若能连上大多数，会触发选举
-<code>因为主节点不能连上多数节点，则写入的数据不能写入到大多数节点</code></li>
+<li>
+<p>跨数据中心</p>
+<ul>
+<li>数据中心失联，另一个数据中心的节点会重新选举</li>
+<li>确保选出的新primary跟应用在同一个数据中心</li>
+</ul>
+<p><code>最热门的莫过于`两地三中心` ,就是同城有两个数据中心，异地有一个数据中心来进行灾备。例如: 北京有两个数据中心， 每个数据中心有两个副本，异地杭州有一个副本。这时候我们就需要用到priority来进行选举的优化。使同一个数据中心的具有相同有priority， 可设BJ.DC1(priority=2), BJ.DC2(priority=1), HZ.DC3(priority=0)这样当主节点挂掉，新主会在同一数据中心、或者同城数据中心来选出。</code>
+    * 网络分区时
+<em> primary 只能连接上少数节点时，会step down 为secondary
+</em> secondary 发现无primary 时， 若能连上大多数，会触发选举</p>
+<p><code>因为主节点不能连上多数节点，则写入的数据不能写入到大多数节点</code></p>
+<h3 id="_3">数据回滚</h3>
+<ul>
+<li>新primary选出后，旧primary可能需要数据回滚</li>
 </ul>
 </li>
 </ul>
-<h3 id="_3">数据回滚</h3>
+<p><code>旧primary有些数据未能写到majority节点,需要回滚，使得各节点数据一致</code>
+<em> 引起回滚原因
+</em> 网络分区</p>
+<pre><code>```
+新primary已经产生，旧primary并未感知到，仍然接收客户端请求。这个时间很短暂。
+```
+</code></pre>
 <ul>
-<li>新primary选出后，旧primary可能需要数据回滚
-<code>旧primary有些数据未能写到majority节点,需要回滚，使得各节点数据一致</code></li>
-<li>引起回滚原因</li>
-<li>网络分区
-    <code>新primary已经产生，旧primary并未感知到，仍然接收客户端请求。这个时间很短暂。</code></li>
 <li>primary 压力过大导致secondary无法跟上</li>
 <li>若primary宕机时， 数据已复制到一个secondary节点，且该节点能访问majority节点，则该数据无需回滚</li>
 <li>回滚数据会保存在rollback文件夹</li>
