@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Read - Tracebundy</title>
+        <title>MySQL-Page - Tracebundy</title>
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -77,7 +77,7 @@
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
@@ -97,8 +97,8 @@
     <a href="../MySQL-Explain/">Select-Explain</a>
 </li>
                             
-<li >
-    <a href="../MySQL-Page/">MySQL-Page</a>
+<li class="active">
+    <a href="./">MySQL-Page</a>
 </li>
                             
 <li >
@@ -106,12 +106,12 @@
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
-<li class="active">
-    <a href="./">Read</a>
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
 </li>
                             
 <li >
@@ -131,12 +131,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../MySQL-InnoDB-Buffer-Pool/">
+                        <a rel="next" href="../MySQL-Explain/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../leveldb-write-flow/">
+                        <a rel="prev" href="../MySQL-InnoDB-Buffer-Pool/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -148,95 +148,119 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#leveldb">LevelDB 读取流程</a></li>
+        <li class="main active"><a href="#_1">页</a></li>
+            <li><a href="#_2">建立压缩表</a></li>
+            <li><a href="#-">表空间--记录</a></li>
+            <li><a href="#_3">页格式</a></li>
+            <li><a href="#_4">隐藏列</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="leveldb">LevelDB 读取流程</h1>
-<p>LevelDB的读取过程总共分为三个流程:</p>
-<ul>
-<li>从当前内存表读取</li>
-<li>从(imm)不可变内存表读取</li>
-<li>从数据文件读取</li>
-</ul>
-<pre><code class="C++">    LookupKey lkey(key, snapshot);
-    if (mem-&gt;Get(lkey, value, &amp;s)) {
-      // Done
-    } else if (imm != NULL &amp;&amp; imm-&gt;Get(lkey, value, &amp;s)) {
-      // Done
-    } else {
-      s = current-&gt;Get(options, lkey, value, &amp;stats);
-      have_stat_update = true;
-    }
+<h1 id="_1">页</h1>
+<pre><code>页是最小的I/O操作单位
 </code></pre>
 
-<p>内存表采用skiplist(跳表)存储。在向文件查询时候，查询的过程:</p>
+<p>普通用户表</p>
+<pre><code>* 默认每个页16K
+* --innodb_page_size(from 5.6)
+</code></pre>
+
+<p>压缩表</p>
+<pre><code>* 基于页的压缩
+* 每个表的页大小可以不同
+</code></pre>
+
+<pre><code>(root@127.0.0.1) [information_schema]&gt;desc information_schema.INNODB_CMPMEM;
++----------------------+------------+------+-----+---------+-------+
+| Field                | Type       | Null | Key | Default | Extra |
++----------------------+------------+------+-----+---------+-------+
+| page_size            | int(5)     | NO   |     | 0       |       |
+| buffer_pool_instance | int(11)    | NO   |     | 0       |       |
+| pages_used           | int(11)    | NO   |     | 0       |       |
+| pages_free           | int(11)    | NO   |     | 0       |       |
+| relocation_ops       | bigint(21) | NO   |     | 0       |       |
+| relocation_time      | int(11)    | NO   |     | 0       |       |
++----------------------+------------+------+-----+---------+-------+
+6 rows in set (0.00 sec)
+</code></pre>
+
+<h2 id="_2">建立压缩表</h2>
+<pre><code>ALTER TABLE XXXX ENGINE=InnoDB ROW_FORMAT=compressed, KEY_BLOCK_SIZE=4
+</code></pre>
+
+<p>原来KEY_BLOCK_SIZE为16K, 现在压缩设置为16K有没有意义？</p>
+<pre><code>有意义，页内的数据都是压缩的，相同的页大小里能存放更多数据
+</code></pre>
+
+<h2 id="-">表空间--记录</h2>
 <ul>
-<li>按文件level顺序查询文件。利用每个文件索引判断key是否在此文件呢。</li>
-<li>level0 级别文件因为是循环写入，所以并非序号大的就代表最新文件。所以需要对文件排序，来找出最新的value变化。</li>
-<li>对可能存在key的文件进行查找，判断是否在此文件。</li>
+<li>用户记录保存在数据页中</li>
+<li>
+<p>记录格式由ROW_FORMAT选项决定</p>
+<ul>
+<li>REDUDENT: 兼容老版本InnoDB</li>
+<li>COMPACT: 默认格式</li>
+<li>COMPRESSED : 支持压缩</li>
+<li>DYNAMIC:大对象记录优化</li>
 </ul>
-<pre><code class="C++"> for (int level = 0; level &lt; config::kNumLevels; level++) {
-    size_t num_files = files_[level].size();
-    if (num_files == 0) continue;
-
-    // Get the list of files to search in this level
-    FileMetaData* const* files = &amp;files_[level][0];
-    if (level == 0) {
-      // Level-0 files may overlap each other.  Find all files that
-      // overlap user_key and process them in order from newest to oldest.
-      tmp.reserve(num_files);
-      for (uint32_t i = 0; i &lt; num_files; i++) {
-        FileMetaData* f = files[i];
-        if (ucmp-&gt;Compare(user_key, f-&gt;smallest.user_key()) &gt;= 0 &amp;&amp;
-            ucmp-&gt;Compare(user_key, f-&gt;largest.user_key()) &lt;= 0) {
-          tmp.push_back(f);
-        }
-      }
-      if (tmp.empty()) continue;
-
-      std::sort(tmp.begin(), tmp.end(), NewestFirst);
-      files = &amp;tmp[0];
-      num_files = tmp.size();
-    } else {
-      // Binary search to find earliest index whose largest key &gt;= ikey.
-      uint32_t index = FindFile(vset_-&gt;icmp_, files_[level], ikey);
-      if (index &gt;= num_files) {
-        files = NULL;
-        num_files = 0;
-      } else {
-        tmp2 = files[index];
-        if (ucmp-&gt;Compare(user_key, tmp2-&gt;smallest.user_key()) &lt; 0) {
-          // All of &quot;tmp2&quot; is past any data for user_key
-          files = NULL;
-          num_files = 0;
-        } else {
-          files = &amp;tmp2;
-          num_files = 1;
-        }
-      }
-    }
-
-    for (uint32_t i = 0; i &lt; num_files; ++i) {
-      if (last_file_read != NULL &amp;&amp; stats-&gt;seek_file == NULL) {
-        // We have had more than one seek for this read.  Charge the 1st file.
-        stats-&gt;seek_file = last_file_read;
-        stats-&gt;seek_file_level = last_file_read_level;
-      }
-
-      FileMetaData* f = files[i];
-      last_file_read = f;
-      last_file_read_level = level;
-
-      Saver saver;
-      saver.state = kNotFound;
-      saver.ucmp = ucmp;
-      saver.user_key = user_key;
-      saver.value = value;
-      s = vset_-&gt;table_cache_-&gt;Get(options, f-&gt;number, f-&gt;file_size,
-                                   ikey, &amp;saver, SaveValue);
-</code></pre></div>
+<p>COMPACT对大对象的存储</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>message(768)</th>
+<th>指针(20) 指向行溢出页</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DYNAMIC大对象存储</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>指针(20) 指向行溢出页</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<p>单行记录大小大于<code>page/2</code>就会启用行溢出页来进行存储</p>
+<p>例子:
+一条记录四个字段长度如下</p>
+<table>
+<thead>
+<tr>
+<th>1K</th>
+<th>2K</th>
+<th>3K</th>
+<th>4K</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>那么会将4K记录会记录到行溢出页中， 如果这条记录还是大于<code>page/2</code>则递归之前的字段放入溢出页</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h2 id="_3">页格式</h2>
+<p><code>row offset array</code>InnoDB为索引组织表，所以在页内为有序的。用来快速定位到指定记录。二分查找</p>
+<h2 id="_4">隐藏列</h2>
+<ul>
+<li>rowid 6字节</li>
+<li>trxid 6字节</li>
+<li>rollptr 回滚指针 7字节</li>
+</ul></div>
         </div>
 
         <footer class="col-md-12">
