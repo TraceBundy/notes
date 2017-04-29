@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>MongoDB-Arbiter - Tracebundy</title>
+        <title>MySQL-Checkpoint - Tracebundy</title>
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -48,7 +48,7 @@
                     <li >
                         <a href="..">Home</a>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
@@ -68,8 +68,8 @@
     <a href="../MongoDB-Add-Remove/">MongoDB-Add-Remove</a>
 </li>
                             
-<li class="active">
-    <a href="./">MongoDB-Arbiter</a>
+<li >
+    <a href="../MongoDB-Arbiter/">MongoDB-Arbiter</a>
 </li>
                             
 <li >
@@ -77,7 +77,7 @@
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
@@ -105,8 +105,8 @@
     <a href="../MySQL-InnoDB-Buffer-Pool/">MySQL-InnoDB-Buffer-Poll</a>
 </li>
                             
-<li >
-    <a href="../MySQL-Checkpoint/">MySQL-Checkpoint</a>
+<li class="active">
+    <a href="./">MySQL-Checkpoint</a>
 </li>
                             
 <li >
@@ -139,12 +139,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../MongoDB-Add-Remove/">
+                        <a rel="next" href="../MySQL-InnoDB-Buffer-Pool/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../MongoDB-Rollback/">
+                        <a rel="prev" href="../MySQL-DoubleWrite/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -156,34 +156,88 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#_1">复制集注意点</a></li>
-            <li><a href="#arbiter">Arbiter 节点</a></li>
+        <li class="main active"><a href="#checkpoint">Checkpoint</a></li>
+            <li><a href="#4lsn-last-checkpoint">为什么上面4个LSN值不一样 Last checkpoint 小于其余三个?</a></li>
+            <li><a href="#sharp-checkpoint">Sharp Checkpoint</a></li>
+            <li><a href="#fuzzy-checkpoint">Fuzzy Checkpoint</a></li>
+            <li><a href="#checkpoint_1">Checkpoint的时机</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h2 id="_1">复制集注意点</h2>
-<h3 id="arbiter">Arbiter 节点</h3>
-<p>Arbiter 节点是专门用来形成多数派的投票节点，它并不复制数据</p>
-<pre><code>    注意 不要将Arbiter 节点与主节点放在同一台机器上
+<h1 id="checkpoint">Checkpoint</h1>
+<ul>
+<li>缩短数据库的恢复时间</li>
+<li>缓冲池不够用时，将脏页刷新到磁盘</li>
+<li>重做日志不可用时，刷新脏页</li>
+</ul>
+<pre><code>LSN有三个位置存放
+
+    * 每个页
+    * Redo Log 
+    * 每个数据库都有 全局LSN
 </code></pre>
 
-<pre><code>For replica sets with an arbiter, replica set protocol version 1 (pv1) increases the likelihood of rollback of w:1 writes compared to replica set protocol version 0  (pv0). See Replica Set Protocol Versions.
+<p><code>SHOW ENGINE INNODB STATUS;</code></p>
+<pre><code>---
+LOG
+---
+Log sequence number 9966946860 内存产生的LSN
+Log flushed up to   9966946860 刷新日志文件的LSN位置
+Pages flushed up to 9966946860 最大的页刷新的LSN位置
+Last checkpoint at  9966946851 我当前数据库的LSN位置
+0 pending log flushes, 0 pending chkp writes
+27905 log i/o's done, 0.00 log i/o's/second
 </code></pre>
 
-<p>官方文档有这样一句话，在<code>W:1</code>情况下，复制集协议<code>version1</code>比<code>version0</code>更容易增加回滚的概率 我们同样可以在官方文档中找到答案</p>
-<pre><code>Back to Back Elections
-To maximize write availability, pv1 does not consider priority when conducting an election. Instead, after a replica set has a stable primary, pv1 makes a “best-effort” attempt to have the secondary with the highestpriority available call an election. This could lead to back-to-back elections as eligible members with higher priority can call an election. But unlike pv0, which must include a 30 second buffer between back-to-back elections, the use of terms in pv1 allows for faster occurence of back-to-back elections.
-Both the increased frequency and the lack of a time buffer between back-to-back elections with pv1 increase the likelihood of rollback of w:1 writes. However, you can reduce the number of rollbacks by raising the catchUpTimeoutMillis setting.
-During an election, pv0 allows nodes to veto based on priority values. As such, after a replica set has a stable primary, pv0 would lead to less back-to-back elections than pv1. Because pv0 relies on clock synchronization to detect multiple primaries, pv0 includes a 30 seconds buffer between back-to-back elections as a precaution against poor clock synchronization.
-
+<h6 id="4lsn-last-checkpoint">为什么上面4个LSN值不一样 <code>Last checkpoint</code> 小于其余三个?</h6>
+<pre><code>Buffer Pool 里的Flush List 是按照LSN来排序的，但同一个页中的LSN只记录的是第一次放进去的LSN位置。那么当刷入到磁盘内的时候，记录的也是第一次的LSN位置。不会记录当前最新的LSN位置。所以会小。
 </code></pre>
 
-<p>就是说 在背靠背选举中，<code>PV1</code> 中在已经有主节点的情况下，高优先级的从节点可以马上发起选举，<code>PV0</code>要等30秒。比如：当在一个稳定的集群中，有持续写入，<code>PV1</code>中高优先级的可以马上发起选举，把当前主节点干掉。那么上一个主节点没有复制到其它节点的数据就会被回滚掉， 而<code>PV0</code>有30秒的Buffer,所以会减少概率。 那么增加Arbiter 节点，Arbiter节点本身不写入数据，所以在<code>PV1</code>概率会加大</p>
-<pre><code>考虑在只有3节点的复制集，其中有一个Arbiter节点，在主节点挂了，从节点被选为主节点。由于`W:1`有可能主节点上的数据没有被复制到从节点。Arbiter节点不写入数据，所以从节点被选为主节点时，可能会丢失最近的主节点数据。
-</code></pre>
-
-<p><a href="https://docs.mongodb.com/manual/reference/replica-set-protocol-versions/">官方链接 replica-set-protocol-versions</a></p></div>
+<h2 id="sharp-checkpoint">Sharp Checkpoint</h2>
+<p>将所有的脏页都刷新回磁盘，刷新时系统hang住，在InnoDB关闭时使用 --innodb_fast_shutdown = {1|0}</p>
+<h2 id="fuzzy-checkpoint">Fuzzy Checkpoint</h2>
+<ul>
+<li>将部分脏页刷新回磁盘</li>
+<li>对系统影响较小
+通过 <code>innodb_io_capacity</code> 来控制每次刷盘的页数</li>
+</ul>
+<h2 id="checkpoint_1">Checkpoint的时机</h2>
+<ul>
+<li>
+<p>Master Thread Checkpoint</p>
+<ul>
+<li>从FLUSH_LIST中进行刷新</li>
+</ul>
+</li>
+<li>
+<p>FLUSH_LRU_LIST Checkpoint</p>
+<ul>
+<li>LRU需要有差不多100个空闲页</li>
+</ul>
+</li>
+<li>
+<p>Async/Sync Flush Checkpoint</p>
+<ul>
+<li>重做日志重用</li>
+</ul>
+</li>
+<li>
+<p>Dirty Page too much Checkpoint</p>
+<ul>
+<li>--innodb_max_dirty_pages_pct</li>
+</ul>
+</li>
+</ul>
+<p>BufferPool中LRU List里面既有干净的页也有脏页。当LRU List页满了的时候，前后要淘汰的页是脏页，那么就需要刷新脏页。通过<code>innodb_lru_scan_depth</code>来控制这种情况下刷新脏页的数量</p>
+<pre><code>root@127.0.0.1) [information_schema]&gt;show global variables like 'innodb_lru%';
++-----------------------+-------+
+| Variable_name         | Value |
++-----------------------+-------+
+| innodb_lru_scan_depth | 1024  |
++-----------------------+-------+
+1 row in set (0.01 sec)
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">

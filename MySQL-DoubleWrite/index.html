@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>MongoDB-Arbiter - Tracebundy</title>
+        <title>MySQL-DoubleWrite - Tracebundy</title>
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -48,7 +48,7 @@
                     <li >
                         <a href="..">Home</a>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
@@ -68,8 +68,8 @@
     <a href="../MongoDB-Add-Remove/">MongoDB-Add-Remove</a>
 </li>
                             
-<li class="active">
-    <a href="./">MongoDB-Arbiter</a>
+<li >
+    <a href="../MongoDB-Arbiter/">MongoDB-Arbiter</a>
 </li>
                             
 <li >
@@ -77,7 +77,7 @@
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
@@ -109,8 +109,8 @@
     <a href="../MySQL-Checkpoint/">MySQL-Checkpoint</a>
 </li>
                             
-<li >
-    <a href="../MySQL-DoubleWrite/">MySQL-DoubleWrite</a>
+<li class="active">
+    <a href="./">MySQL-DoubleWrite</a>
 </li>
                         </ul>
                     </li>
@@ -139,12 +139,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../MongoDB-Add-Remove/">
+                        <a rel="next" href="../MySQL-Checkpoint/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../MongoDB-Rollback/">
+                        <a rel="prev" href="../leveldb-read-flow/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -156,34 +156,115 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#_1">复制集注意点</a></li>
-            <li><a href="#arbiter">Arbiter 节点</a></li>
+        <li class="main active"><a href="#_1">性能开销</a></li>
+        <li class="main "><a href="#_2">关闭参数</a></li>
+        <li class="main "><a href="#insertchange-buffer">Insert/Change Buffer</a></li>
+            <li><a href="#_3">原理</a></li>
+        <li class="main "><a href="#_4">潜在问题</a></li>
+        <li class="main "><a href="#_5">自适应哈希索引</a></li>
+            <li><a href="#_6">判断条件</a></li>
+        <li class="main "><a href="#flush-neighbor-page">FLUSH NEIGHBOR PAGE</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h2 id="_1">复制集注意点</h2>
-<h3 id="arbiter">Arbiter 节点</h3>
-<p>Arbiter 节点是专门用来形成多数派的投票节点，它并不复制数据</p>
-<pre><code>    注意 不要将Arbiter 节点与主节点放在同一台机器上
+<p>ubleWrite</p>
+<pre><code>在数据中我们的页可能是16K的，但一次写入有可能为4K、6K、8K、12K的情况，这时候是不能用Redo Log来恢复的。为此MySQL引入DoubleWrite用来保证数据写入的可靠性。
 </code></pre>
 
-<pre><code>For replica sets with an arbiter, replica set protocol version 1 (pv1) increases the likelihood of rollback of w:1 writes compared to replica set protocol version 0  (pv0). See Replica Set Protocol Versions.
+<pre><code>每次更新的时候并不直接写页文件，先写入到doublewrite的表空间里，再写入到数据文件。每次写入doublewrite为128页(doublewrite在共享表空间为2个文件，每个1MB)。
 </code></pre>
 
-<p>官方文档有这样一句话，在<code>W:1</code>情况下，复制集协议<code>version1</code>比<code>version0</code>更容易增加回滚的概率 我们同样可以在官方文档中找到答案</p>
-<pre><code>Back to Back Elections
-To maximize write availability, pv1 does not consider priority when conducting an election. Instead, after a replica set has a stable primary, pv1 makes a “best-effort” attempt to have the secondary with the highestpriority available call an election. This could lead to back-to-back elections as eligible members with higher priority can call an election. But unlike pv0, which must include a 30 second buffer between back-to-back elections, the use of terms in pv1 allows for faster occurence of back-to-back elections.
-Both the increased frequency and the lack of a time buffer between back-to-back elections with pv1 increase the likelihood of rollback of w:1 writes. However, you can reduce the number of rollbacks by raising the catchUpTimeoutMillis setting.
-During an election, pv0 allows nodes to veto based on priority values. As such, after a replica set has a stable primary, pv0 would lead to less back-to-back elections than pv1. Because pv0 relies on clock synchronization to detect multiple primaries, pv0 includes a 30 seconds buffer between back-to-back elections as a precaution against poor clock synchronization.
+<h2 id="_1">性能开销</h2>
+<pre><code>doublewrite是顺序写入，性能开销取决于写入量，性能开销通常5%~25%，slave服务器可以考虑关闭
+</code></pre>
+
+<h2 id="_2">关闭参数</h2>
+<pre><code>(root@127.0.0.1) [information_schema]&gt;show global variables like 'innodb_doublewrite%';
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| innodb_doublewrite | ON    |
++--------------------+-------+
+1 row in set (0.00 sec)
 
 </code></pre>
 
-<p>就是说 在背靠背选举中，<code>PV1</code> 中在已经有主节点的情况下，高优先级的从节点可以马上发起选举，<code>PV0</code>要等30秒。比如：当在一个稳定的集群中，有持续写入，<code>PV1</code>中高优先级的可以马上发起选举，把当前主节点干掉。那么上一个主节点没有复制到其它节点的数据就会被回滚掉， 而<code>PV0</code>有30秒的Buffer,所以会减少概率。 那么增加Arbiter 节点，Arbiter节点本身不写入数据，所以在<code>PV1</code>概率会加大</p>
-<pre><code>考虑在只有3节点的复制集，其中有一个Arbiter节点，在主节点挂了，从节点被选为主节点。由于`W:1`有可能主节点上的数据没有被复制到从节点。Arbiter节点不写入数据，所以从节点被选为主节点时，可能会丢失最近的主节点数据。
+<h1 id="insertchange-buffer">Insert/Change Buffer</h1>
+<ul>
+<li>提升二级非唯一索引的增删改性能</li>
+</ul>
+<h2 id="_3">原理</h2>
+<p>1、先判断插入的非聚集索引页是否在缓冲池中，若在，则直接插入
+2、若不在，则先放入到一个Insert Buffer对象中
+    * insert buffer 也是一颗B+树
+    * 每次最多缓存2K的记录
+3、当读取辅助索引页到缓存池，将Insert Buffer中该页的记录合并到辅助索引页</p>
+<pre><code>------------------------------------
+INSERT BUFFER AND ADAPTIVE HASH INDEX
+-------------------------------------
+Ibuf: size 1(使用的page), free list len 3092(空闲page), seg size 3094(=size+free list len + 1, 1018710 merges
+merged operations:
+ insert 25797737, delete mark 0, delete 0
+discarded operations:
+ insert 0, delete mark 0, delete 0
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+0.00 hash searches/s, 0.00 non-hash searches/s
 </code></pre>
 
-<p><a href="https://docs.mongodb.com/manual/reference/replica-set-protocol-versions/">官方链接 replica-set-protocol-versions</a></p></div>
+<h1 id="_4">潜在问题</h1>
+<ul>
+<li>
+<p>最大可以使用1/2缓冲池内存</p>
+<p><code>(root@127.0.0.1) [information_schema]&gt;show global variables like 'innodb_change_buffer_max%';
++-------------------------------+-------+
+| Variable_name                 | Value |
++-------------------------------+-------+
+| innodb_change_buffer_max_size | 25    |
++-------------------------------+-------+
+1 row in set (0.01 sec)</code></p>
+</li>
+<li>
+<p>shutdown 不进行insert buffer记录的合并</p>
+</li>
+<li>insert buffer 开始进行合并时插入性能开始下降</li>
+</ul>
+<h1 id="_5">自适应哈希索引</h1>
+<p>根据B+树的访问模式构建哈希索引，仅对热点页中的记录创建哈希索引。存放也内存，仅支持点查询</p>
+<pre><code>(root@127.0.0.1) [information_schema]&gt;show global variables like 'innodb_%hash%';
++----------------------------------+-------+
+| Variable_name                    | Value |
++----------------------------------+-------+
+| innodb_adaptive_hash_index       | ON    |
+| innodb_adaptive_hash_index_parts | 8     |
++----------------------------------+-------+
+2 rows in set (0.00 sec)
+</code></pre>
+
+<h2 id="_6">判断条件</h2>
+<ul>
+<li>索引是否被访问了17次</li>
+<li>索引中某个页已经被访问了至少100次</li>
+<li>对索引中的页访问的模式都是相同的</li>
+<li>idx_a_b(a,b) WHERE a=xxx 或 WHERE a = xxx and b = xxx</li>
+</ul>
+<h1 id="flush-neighbor-page">FLUSH NEIGHBOR PAGE</h1>
+<p>试图刷新页所在区中的所有脏页，对传统机械磁盘有效，SSD关闭。</p>
+<pre><code>(root@127.0.0.1) [information_schema]&gt;show global variables like 'innodb_flush_neighbors%';
++------------------------+-------+
+| Variable_name          | Value |
++------------------------+-------+
+| innodb_flush_neighbors | 1     |
++------------------------+-------+
+1 row in set (0.00 sec)
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">
