@@ -156,8 +156,9 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#_1">性能开销</a></li>
-        <li class="main "><a href="#_2">关闭参数</a></li>
+        <li class="main active"><a href="#dublewrite">DubleWrite</a></li>
+            <li><a href="#_1">性能开销</a></li>
+            <li><a href="#_2">关闭参数</a></li>
         <li class="main "><a href="#insertchange-buffer">Insert/Change Buffer</a></li>
             <li><a href="#_3">原理</a></li>
         <li class="main "><a href="#_4">潜在问题</a></li>
@@ -168,7 +169,7 @@
 </div></div>
                 <div class="col-md-9" role="main">
 
-<p>ubleWrite</p>
+<h1 id="dublewrite">DubleWrite</h1>
 <pre><code>在数据中我们的页可能是16K的，但一次写入有可能为4K、6K、8K、12K的情况，这时候是不能用Redo Log来恢复的。为此MySQL引入DoubleWrite用来保证数据写入的可靠性。
 </code></pre>
 
