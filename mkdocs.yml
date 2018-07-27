@@ -5,13 +5,24 @@ pages:
         - Query : 'MongoDB-Query.md'
         - MongoDB&Raft : 'MongoDB-Raft.md'
         - MongoDB-Oplog : 'Mongo-oplog-introduce.md'
+        - MongoDB-Add-Remove : 'MongoDB-Add-Remove.md'
+        - MongoDB-Arbiter : 'MongoDB-Arbiter.md'
+        - MongoDB-Recover : 'MongoDB-Rollback.md'
         # - Pipeline : 'MongoDB-Pipeline.md'
     - MySQL :
         - Select : 'MySQL-Select.md'
         - Select-Index1 : 'MySQL-Index1.md'
+        - Select-Fulltext : 'MySQL-Fulltext.md'
+        - Select-Explain: 'MySQL-Explain.md'
+        - MySQL-Page : 'MySQL-Page.md'
+        - MySQL-InnoDB-Buffer-Poll : 'MySQL-InnoDB-Buffer-Pool.md'
+        - MySQL-Checkpoint : 'MySQL-Checkpoint.md'
+        - MySQL-DoubleWrite : 'MySQL-DoubleWrite.md'
     - LevelDB :
         - Read : 'leveldb-read-flow.md'
         - Write : 'leveldb-write-flow.md'
+    - BlockChain :
+        - Introduce : 'blockchain.md'
     - About : 'about.md'
 theme: mkdocs
 # theme: readthedocs

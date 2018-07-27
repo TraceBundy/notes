@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Write - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Raft/">MongoDB&Raft</a>
+</li>
+                            
+<li >
+    <a href="../Mongo-oplog-introduce/">MongoDB-Oplog</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Add-Remove/">MongoDB-Add-Remove</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Arbiter/">MongoDB-Arbiter</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Rollback/">MongoDB-Recover</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Index1/">Select-Index1</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Fulltext/">Select-Fulltext</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Explain/">Select-Explain</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
+</li>
+                            
+<li class="active">
+    <a href="./">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../leveldb-read-flow/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../about/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#leveldb-">LevelDB 源码解析-写入</a></li>
+        <li class="main "><a href="#writebatch">WriteBatch类</a></li>
+            <li><a href="#_1">分配空间</a></li>
+            <li><a href="#_2">组提交</a></li>
+            <li><a href="#_3">日志文件</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h2 id="leveldb-">LevelDB 源码解析-写入</h2>
+<p>本系列介绍LevelDB,对其源码进行解析。</p>
+<h2 id="writebatch">WriteBatch类</h2>
+<p>在进行插入更新操作的时候，WriteBatch类负责进行批量的原子性操作。下面来看一看WriteBatch结构：</p>
+<pre><code class="c++">class WriteBatch {
+ public:
+  WriteBatch();
+  ~WriteBatch();
+
+  // Store the mapping &quot;key-&gt;value&quot; in the database.
+  void Put(const Slice&amp; key, const Slice&amp; value);
+
+  // If the database contains a mapping for &quot;key&quot;, erase it.  Else do nothing.
+  void Delete(const Slice&amp; key);
+
+  // Clear all updates buffered in this batch.
+  void Clear();
+
+  // Support for iterating over the contents of a batch.
+  class Handler {
+   public:
+    virtual ~Handler();
+    virtual void Put(const Slice&amp; key, const Slice&amp; value) = 0;
+    virtual void Delete(const Slice&amp; key) = 0;
+  };
+  Status Iterate(Handler* handler) const;
+
+ public:
+  friend class WriteBatchInternal;
+
+  std::string rep_;  // See comment in write_batch.cc for the format of rep_
+
+  // Intentionally copyable
+};
+
+</code></pre>
+
+<p>WriteBatch 提供 Put、Delete、Clear 操作。可以看到 rep_ 存储的方式利用的 std::string。下面介绍一下存储的结构。</p>
+<table>
+<thead>
+<tr>
+<th>8byte</th>
+<th>4byte</th>
+<th>1byte</th>
+<th>key's length (变长)</th>
+<th>key's value</th>
+<th>value's length(变长)</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>sequence</td>
+<td>操作次数</td>
+<td>操作类型</td>
+<td>key 的长度</td>
+<td>key 的内容</td>
+<td>value 的长度</td>
+</tr>
+</tbody>
+</table>
+<p>这里 key value 长度的写入是可变长度的，以便节省空间。</p>
+<pre><code class="c++">char* EncodeVarint32(char* dst, uint32_t v) {
+  // Operate on characters as unsigneds
+  unsigned char* ptr = reinterpret_cast&lt;unsigned char*&gt;(dst);
+  static const int B = 128;
+  if (v &lt; (1&lt;&lt;7)) {
+    *(ptr++) = v;
+  } else if (v &lt; (1&lt;&lt;14)) {
+    *(ptr++) = v | B;
+    *(ptr++) = v&gt;&gt;7;
+  } else if (v &lt; (1&lt;&lt;21)) {
+    *(ptr++) = v | B;
+    *(ptr++) = (v&gt;&gt;7) | B;
+    *(ptr++) = v&gt;&gt;14;
+  } else if (v &lt; (1&lt;&lt;28)) {
+    *(ptr++) = v | B;
+    *(ptr++) = (v&gt;&gt;7) | B;
+    *(ptr++) = (v&gt;&gt;14) | B;
+    *(ptr++) = v&gt;&gt;21;
+  } else {
+    *(ptr++) = v | B;
+    *(ptr++) = (v&gt;&gt;7) | B;
+    *(ptr++) = (v&gt;&gt;14) | B;
+    *(ptr++) = (v&gt;&gt;21) | B;
+    *(ptr++) = v&gt;&gt;28;
+  }
+  return reinterpret_cast&lt;char*&gt;(ptr);
+}
+
+</code></pre>
+
+<p>举例：</p>
+<table>
+<thead>
+<tr>
+<th>0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00</th>
+<th>0x01 0x00 0x00 0x00</th>
+<th>0x01</th>
+<th>0x05</th>
+<th>0x68 0x65 0x6C 0x6C 0x6F</th>
+<th>0x05</th>
+<th>0x77 0x6F 0x72 0x6C 0x64</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sequence</td>
+<td>操作次数</td>
+<td>操作类型(put)</td>
+<td>key 长度(5)</td>
+<td>'hello'</td>
+<td>value 长度</td>
+<td>‘world’</td>
+</tr>
+</tbody>
+</table>
+<p>LevelDB写入操作在函数:
+<code>Status DBImpl::Write(const WriteOptions&amp; options, WriteBatch* my_batch)</code></p>
+<p>主要流程:</p>
+<pre><code class="flow">st=&gt;start: 开始
+e=&gt;end: 结束
+op=&gt;operation: 分配足够的空间
+op1=&gt;operation: 合并操作
+op2=&gt;operation: 写入日志
+op3=&gt;operation: 写入内存
+cond=&gt;condition: 确认？
+
+st-&gt;op-&gt;op1-&gt;op2-&gt;op3-&gt;e
+cond(yes)-&gt;e
+cond(no)-&gt;op
+</code></pre>
+
+<p>下面逐个说明各个流程:</p>
+<h6 id="_1">分配空间</h6>
+<p>主要在 <code>Status DBImpl::MakeRoomForWrite(bool force)</code> 里面。集中在各个状态的判断上。分别是 </p>
+<ul>
+<li>
+<p>level0文件是否超过kL0_SlowdownWritesTrigger(8)个数，如果超过则睡眠1000us, 等待背景线程合并level0文件</p>
+</li>
+<li>
+<p>当前内存表满了，并且imm （不可变）内存仍然在compacted，则等待。</p>
+</li>
+<li>
+<p>如果level0文件超过kL0_StopWritesTrigger(12)文件则等待</p>
+</li>
+<li>
+<p>最后的情况就是当前内存表满了，imm(不可变内存表没有满）则进行切换，并触发compact后台线程</p>
+</li>
+</ul>
+<h6 id="_2">组提交</h6>
+<p>这部分主要是提交当前版本号以前的数据:</p>
+<ul>
+<li>
+<p>首先，将当前版本号以前的WriteBatch合并为一个WriteBatch 并且更新版本号+1</p>
+</li>
+<li>
+<p>写入日志文件</p>
+</li>
+<li>
+<p>写入内存表</p>
+</li>
+<li>
+<p>更新当前版本号之前的Writers队列信息，done的动作由false变为true。</p>
+</li>
+<li>
+<p>通知其它线程</p>
+</li>
+</ul>
+<h6 id="_3">日志文件</h6>
+<p>日志文件是有block组成。每个block里面存储多条日志信息。每一条日志信息个格式如下:</p>
+<table>
+<thead>
+<tr>
+<th>4 bytes</th>
+<th>2 bytes</th>
+<th>1 byte</th>
+<th>n bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>crc校验</td>
+<td>数据长度</td>
+<td>记录类型</td>
+<td>数据</td>
+</tr>
+</tbody>
+</table>
+<p>前7位为header。记录类型有以下几种:</p>
+<ul>
+<li>kFullType</li>
+<li>kFirstType</li>
+<li>kMiddleType</li>
+<li>kLastType</li>
+</ul>
+<p>对应写入block内的几种情况</p>
+<ul>
+<li>block能够容纳一条数据的写入</li>
+<li>block能写到数据的一部分</li>
+<li>一条数据有可能大于一个block大小，则写入有可能一个block只写了数据的中间部分</li>
+<li>block写入一条数据的尾部</li>
+</ul>
+<p>如果一个block的剩余空间小于kHeaderSize，则剩余节用0x00填充。
+下面用实际例子来说明:
+我们向文件写入key:“hello" value:"world"日志产生如下
+<code>00000000  c8 d2 82 81 19 00 01 01  00 00 00 00 00 00 00 01  |................|
+00000010  00 00 00 01 05 68 65 6c  6c 6f 05 77 6f 72 6c 64  |.....hello.world|
+00000020</code></p>
+<p><code>c8 d2 82 81</code> 为CRC校验
+<code>19 00</code> 为数据长度
+<code>01</code> 为记录类型
+<code>00 00 00 00 00 00 00 01</code> 为sequence
+<code>00 00 00 01</code> 为count
+<code>05</code>为key长度
+<code>68 65 6c  6c 6f</code> 为hello
+<code>05</code>为value长度
+<code>77 6f 72 6c 64</code> 为world</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

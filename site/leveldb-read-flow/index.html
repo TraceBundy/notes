@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Read - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Raft/">MongoDB&Raft</a>
+</li>
+                            
+<li >
+    <a href="../Mongo-oplog-introduce/">MongoDB-Oplog</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Add-Remove/">MongoDB-Add-Remove</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Arbiter/">MongoDB-Arbiter</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Rollback/">MongoDB-Recover</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Index1/">Select-Index1</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Fulltext/">Select-Fulltext</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Explain/">Select-Explain</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li class="active">
+    <a href="./">Read</a>
+</li>
+                            
+<li >
+    <a href="../leveldb-write-flow/">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../MySQL-Explain/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../leveldb-write-flow/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#leveldb">LevelDB 读取流程</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="leveldb">LevelDB 读取流程</h1>
+<p>LevelDB的读取过程总共分为三个流程:</p>
+<ul>
+<li>从当前内存表读取</li>
+<li>从(imm)不可变内存表读取</li>
+<li>从数据文件读取</li>
+</ul>
+<pre><code class="C++">    LookupKey lkey(key, snapshot);
+    if (mem-&gt;Get(lkey, value, &amp;s)) {
+      // Done
+    } else if (imm != NULL &amp;&amp; imm-&gt;Get(lkey, value, &amp;s)) {
+      // Done
+    } else {
+      s = current-&gt;Get(options, lkey, value, &amp;stats);
+      have_stat_update = true;
+    }
+</code></pre>
+
+<p>内存表采用skiplist(跳表)存储。在向文件查询时候，查询的过程:</p>
+<ul>
+<li>按文件level顺序查询文件。利用每个文件索引判断key是否在此文件呢。</li>
+<li>level0 级别文件因为是循环写入，所以并非序号大的就代表最新文件。所以需要对文件排序，来找出最新的value变化。</li>
+<li>对可能存在key的文件进行查找，判断是否在此文件。</li>
+</ul>
+<pre><code class="C++"> for (int level = 0; level &lt; config::kNumLevels; level++) {
+    size_t num_files = files_[level].size();
+    if (num_files == 0) continue;
+
+    // Get the list of files to search in this level
+    FileMetaData* const* files = &amp;files_[level][0];
+    if (level == 0) {
+      // Level-0 files may overlap each other.  Find all files that
+      // overlap user_key and process them in order from newest to oldest.
+      tmp.reserve(num_files);
+      for (uint32_t i = 0; i &lt; num_files; i++) {
+        FileMetaData* f = files[i];
+        if (ucmp-&gt;Compare(user_key, f-&gt;smallest.user_key()) &gt;= 0 &amp;&amp;
+            ucmp-&gt;Compare(user_key, f-&gt;largest.user_key()) &lt;= 0) {
+          tmp.push_back(f);
+        }
+      }
+      if (tmp.empty()) continue;
+
+      std::sort(tmp.begin(), tmp.end(), NewestFirst);
+      files = &amp;tmp[0];
+      num_files = tmp.size();
+    } else {
+      // Binary search to find earliest index whose largest key &gt;= ikey.
+      uint32_t index = FindFile(vset_-&gt;icmp_, files_[level], ikey);
+      if (index &gt;= num_files) {
+        files = NULL;
+        num_files = 0;
+      } else {
+        tmp2 = files[index];
+        if (ucmp-&gt;Compare(user_key, tmp2-&gt;smallest.user_key()) &lt; 0) {
+          // All of &quot;tmp2&quot; is past any data for user_key
+          files = NULL;
+          num_files = 0;
+        } else {
+          files = &amp;tmp2;
+          num_files = 1;
+        }
+      }
+    }
+
+    for (uint32_t i = 0; i &lt; num_files; ++i) {
+      if (last_file_read != NULL &amp;&amp; stats-&gt;seek_file == NULL) {
+        // We have had more than one seek for this read.  Charge the 1st file.
+        stats-&gt;seek_file = last_file_read;
+        stats-&gt;seek_file_level = last_file_read_level;
+      }
+
+      FileMetaData* f = files[i];
+      last_file_read = f;
+      last_file_read_level = level;
+
+      Saver saver;
+      saver.state = kNotFound;
+      saver.ucmp = ucmp;
+      saver.user_key = user_key;
+      saver.value = value;
+      s = vset_-&gt;table_cache_-&gt;Get(options, f-&gt;number, f-&gt;file_size,
+                                   ikey, &amp;saver, SaveValue);
+</code></pre></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

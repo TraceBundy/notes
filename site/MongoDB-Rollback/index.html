@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>MongoDB-Recover - Tracebundy</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">Tracebundy</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MongoDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MongoDB-Query/">Query</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Raft/">MongoDB&Raft</a>
+</li>
+                            
+<li >
+    <a href="../Mongo-oplog-introduce/">MongoDB-Oplog</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Add-Remove/">MongoDB-Add-Remove</a>
+</li>
+                            
+<li >
+    <a href="../MongoDB-Arbiter/">MongoDB-Arbiter</a>
+</li>
+                            
+<li class="active">
+    <a href="./">MongoDB-Recover</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">MySQL <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../MySQL-Select/">Select</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Index1/">Select-Index1</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Fulltext/">Select-Fulltext</a>
+</li>
+                            
+<li >
+    <a href="../MySQL-Explain/">Select-Explain</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LevelDB <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../leveldb-read-flow/">Read</a>
+</li>
+                            
+<li >
+    <a href="../leveldb-write-flow/">Write</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../MongoDB-Arbiter/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../MySQL-Select/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#mongodb">MongoDB故障恢复和选举</a></li>
+            <li><a href="#_1">选举状态</a></li>
+            <li><a href="#_2">影响因素</a></li>
+            <li><a href="#_3">数据回滚</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h2 id="mongodb">MongoDB故障恢复和选举</h2>
+<h3 id="_1">选举状态</h3>
+<ul>
+<li>Vote 为1的节点均可以选举</li>
+<li>可进行选举的节点<ul>
+<li>Primary 、secondary</li>
+<li>Recovering 、 arbiter 、 rollback 可以参与选举，但不能成为候选人(成为主节点)</li>
+</ul>
+</li>
+</ul>
+<h3 id="_2">影响因素</h3>
+<ul>
+<li>复制选举协议<ul>
+<li>Pv1提高了故障恢复协议， 缩短了多primary的发现时间</li>
+</ul>
+</li>
+<li>
+<p>心跳互探
+    默认2秒一次心跳、10秒心跳超时，若超时，则判断该节点不可访问
+    ```
+        "settings" : {
+        "chainingAllowed" : true,
+        "heartbeatIntervalMillis" : 2000, 心跳
+        "heartbeatTimeoutSecs" : 10,心跳超时
+        "electionTimeoutMillis" : 10000,
+        "catchUpTimeoutMillis" : 2000, 从其它节点拉数据的超时时间
+        "getLastErrorModes" : {</p>
+<pre><code>}
+</code></pre>
+<p>```
+<em> 成员的priority设置
+</em> 影响选举时间和结果
+<em> 高priority会更快发起选举、更容易赢得选举
+</em> 低priority 能获胜，但高priority会继续发起选举直到获胜</p>
+<p>```
+    {
+        "_id" : 3,
+        "host" : "127.0.0.1:47020",
+        "arbiterOnly" : false,
+        "buildIndexes" : true,
+        "hidden" : false,
+        "priority" : 1,
+        "tags" : {</p>
+<pre><code>    },
+    "slaveDelay" : NumberLong(0),
+    "votes" : 1
+}
+</code></pre>
+<p>```
+* 跨数据中心
+    * 数据中心失联，另一个数据中心的节点会重新选举
+    * 确保选出的新primary跟应用在同一个数据中心</p>
+<pre><code>```
+    最热门的莫过于`两地三中心` ,就是同城有两个数据中心，异地有一个数据中心来进行灾备。例如: 北京有两个数据中心， 每个数据中心有两个副本，异地杭州有一个副本。这时候我们就需要用到priority来进行选举的优化。使同一个数据中心的具有相同有priority， 可设BJ.DC1(priority=2), BJ.DC2(priority=1), HZ.DC3(priority=0)这样当主节点挂掉，新主会在同一数据中心、或者同城数据中心来选出。
+```
+</code></pre>
+<ul>
+<li>网络分区时<ul>
+<li>primary 只能连接上少数节点时，会step down 为secondary</li>
+<li>secondary 发现无primary 时， 若能连上大多数，会触发选举
+<code>因为主节点不能连上多数节点，则写入的数据不能写入到大多数节点</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="_3">数据回滚</h3>
+<ul>
+<li>新primary选出后，旧primary可能需要数据回滚
+<code>旧primary有些数据未能写到majority节点,需要回滚，使得各节点数据一致</code></li>
+<li>引起回滚原因</li>
+<li>网络分区
+    <code>新primary已经产生，旧primary并未感知到，仍然接收客户端请求。这个时间很短暂。</code></li>
+<li>primary 压力过大导致secondary无法跟上</li>
+<li>若primary宕机时， 数据已复制到一个secondary节点，且该节点能访问majority节点，则该数据无需回滚</li>
+<li>回滚数据会保存在rollback文件夹</li>
+<li><database>.<collection>.<timestamp>.bson形式存放</li>
+<li>回滚限制300MB 大于300MB则需要人工介入</li>
+</ul>
+</li>
+<li>
+<p>如何避免回滚</p>
+<ul>
+<li>W ： majority</li>
+<li>writeConcernMajorityJournalDefault:true</li>
+</ul>
+</li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
